@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Contract;
+namespace ProdumanOrg\DoctrineEncryption\Contract;
 
 interface CiphertextDetectorInterface
 {

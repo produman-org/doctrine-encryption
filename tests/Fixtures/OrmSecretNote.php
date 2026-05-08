@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Fixtures;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
-use DoctrineEncryption\Attribute\Encrypted;
+use ProdumanOrg\DoctrineEncryption\Attribute\Encrypted;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'orm_secret_notes')]

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Integration;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Integration;
 
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
-use DoctrineEncryption\DoctrineEncryptionBundle;
-use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
-use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\DoctrineEncryptionBundle;
+use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use ProdumanOrg\DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -23,7 +23,7 @@ final class SymfonyContainerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->projectDir = sys_get_temp_dir() . '/doctrine-encryption-kernel-' . bin2hex(random_bytes(8));
+        $this->projectDir = sys_get_temp_dir().'/doctrine-encryption-kernel-'.bin2hex(random_bytes(8));
     }
 
     protected function tearDown(): void
@@ -53,7 +53,7 @@ final class SymfonyContainerTest extends TestCase
 
             self::assertIsString($ciphertext);
             self::assertSame('container secret', $encryptor->decrypt($ciphertext));
-            self::assertFileExists($this->projectDir . '/config/secrets/test/.Halite.key');
+            self::assertFileExists($this->projectDir.'/config/secrets/test/.Halite.key');
         } finally {
             $kernel->shutdown();
         }
@@ -123,11 +123,11 @@ final class DoctrineEncryptionTestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return $this->projectDir . '/var/cache/' . $this->environment;
+        return $this->projectDir.'/var/cache/'.$this->environment;
     }
 
     public function getLogDir(): string
     {
-        return $this->projectDir . '/var/log';
+        return $this->projectDir.'/var/log';
     }
 }

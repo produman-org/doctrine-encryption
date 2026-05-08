@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Encryption;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Encryption;
 
-use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
 use FilesystemIterator;
 use ParagonIE\Halite\KeyFactory;
 use PHPUnit\Framework\TestCase;
+use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
@@ -19,8 +19,8 @@ final class HaliteFieldEncryptorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->keyDirectory = sys_get_temp_dir() . '/doctrine-encryption-' . bin2hex(random_bytes(8));
-        $this->keyFile = $this->keyDirectory . '/config/secrets/test/.Halite.key';
+        $this->keyDirectory = sys_get_temp_dir().'/doctrine-encryption-'.bin2hex(random_bytes(8));
+        $this->keyFile = $this->keyDirectory.'/config/secrets/test/.Halite.key';
 
         self::assertTrue(mkdir(dirname($this->keyFile), 0o700, true));
         KeyFactory::save(KeyFactory::generateEncryptionKey(), $this->keyFile);
@@ -59,7 +59,7 @@ final class HaliteFieldEncryptorTest extends TestCase
 
     public function testItCreatesMissingKeyFile(): void
     {
-        $keyFile = $this->keyDirectory . '/another/config/secrets/test/.Halite.key';
+        $keyFile = $this->keyDirectory.'/another/config/secrets/test/.Halite.key';
         $encryptor = new HaliteFieldEncryptor($keyFile);
 
         self::assertFileDoesNotExist($keyFile);
@@ -67,9 +67,9 @@ final class HaliteFieldEncryptorTest extends TestCase
         $ciphertext = $encryptor->encrypt('top secret');
 
         self::assertFileExists($keyFile);
-        self::assertFileExists($keyFile . '.lock');
+        self::assertFileExists($keyFile.'.lock');
         self::assertSame('0600', substr(sprintf('%o', fileperms($keyFile)), -4));
-        self::assertSame('0600', substr(sprintf('%o', fileperms($keyFile . '.lock')), -4));
+        self::assertSame('0600', substr(sprintf('%o', fileperms($keyFile.'.lock')), -4));
         self::assertSame('top secret', (new HaliteFieldEncryptor($keyFile))->decrypt($ciphertext));
     }
 

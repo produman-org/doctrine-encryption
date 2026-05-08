@@ -5,7 +5,7 @@
          colors="true"
          cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Doctrine Encryption Bundle">
+        <testsuite name="produman-org/doctrine-encryption">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

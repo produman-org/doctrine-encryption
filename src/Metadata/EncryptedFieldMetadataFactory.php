@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Metadata;
+namespace ProdumanOrg\DoctrineEncryption\Metadata;
 
 use Doctrine\Persistence\Proxy;
-use DoctrineEncryption\Attribute\Encrypted;
+use ProdumanOrg\DoctrineEncryption\Attribute\Encrypted;
 use ReflectionClass;
 
 final class EncryptedFieldMetadataFactory
@@ -56,7 +56,7 @@ final class EncryptedFieldMetadataFactory
      */
     public function forClassFieldNames(string $class, array $fieldNames): array
     {
-        if ($fieldNames === []) {
+        if ([] === $fieldNames) {
             return [];
         }
 
@@ -93,7 +93,7 @@ final class EncryptedFieldMetadataFactory
 
                 $seen[$property->getName()] = true;
 
-                if ($property->getAttributes(Encrypted::class) === []) {
+                if ([] === $property->getAttributes(Encrypted::class)) {
                     continue;
                 }
 
@@ -101,7 +101,7 @@ final class EncryptedFieldMetadataFactory
             }
 
             $reflection = $reflection->getParentClass();
-        } while ($reflection !== false);
+        } while (false !== $reflection);
 
         return $fields;
     }
@@ -114,7 +114,7 @@ final class EncryptedFieldMetadataFactory
         if ($object instanceof Proxy) {
             $parentClass = get_parent_class($object);
 
-            if ($parentClass !== false) {
+            if (false !== $parentClass) {
                 return $parentClass;
             }
         }

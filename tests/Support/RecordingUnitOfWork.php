@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Support;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Support;
 
 final class RecordingUnitOfWork
 {

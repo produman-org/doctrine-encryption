@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Support;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Support;
 
-use DoctrineEncryption\Contract\CiphertextDetectorInterface;
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\Contract\CiphertextDetectorInterface;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
 
 final class InMemoryFieldEncryptor implements FieldEncryptorInterface, CiphertextDetectorInterface
 {
@@ -23,7 +23,7 @@ final class InMemoryFieldEncryptor implements FieldEncryptorInterface, Ciphertex
     {
         $this->encryptedValues[] = $value;
 
-        return $value === null ? null : 'enc:' . $value;
+        return null === $value ? null : 'enc:'.$value;
     }
 
     public function decrypt(?string $value): ?string
@@ -35,6 +35,6 @@ final class InMemoryFieldEncryptor implements FieldEncryptorInterface, Ciphertex
 
     public function isCiphertext(?string $value): bool
     {
-        return $value !== null && str_starts_with($value, 'enc:');
+        return null !== $value && str_starts_with($value, 'enc:');
     }
 }

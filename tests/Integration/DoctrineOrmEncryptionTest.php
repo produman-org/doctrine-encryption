@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Integration;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Integration;
 
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\DriverManager;
@@ -10,12 +10,12 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
-use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
-use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
-use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
-use DoctrineEncryption\Tests\Fixtures\OrmSecretNote;
 use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use ProdumanOrg\DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
+use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\OrmSecretNote;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -29,7 +29,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
             self::markTestSkipped('The pdo_sqlite extension is required for Doctrine ORM integration tests.');
         }
 
-        $this->keyDirectory = sys_get_temp_dir() . '/doctrine-encryption-orm-' . bin2hex(random_bytes(8));
+        $this->keyDirectory = sys_get_temp_dir().'/doctrine-encryption-orm-'.bin2hex(random_bytes(8));
     }
 
     protected function tearDown(): void
@@ -150,12 +150,12 @@ final class DoctrineOrmEncryptionTest extends TestCase
 
     private function createEntityManager(): EntityManagerInterface
     {
-        $config = ORMSetup::createAttributeMetadataConfig([__DIR__ . '/../Fixtures'], true);
+        $config = ORMSetup::createAttributeMetadataConfig([__DIR__.'/../Fixtures'], true);
         $config->enableNativeLazyObjects(true);
         $eventManager = new EventManager();
         $eventManager->addEventSubscriber(new DoctrineEncryptionSubscriber(
             new EncryptedFieldMetadataFactory(),
-            new HaliteFieldEncryptor($this->keyDirectory . '/config/secrets/test/.Halite.key'),
+            new HaliteFieldEncryptor($this->keyDirectory.'/config/secrets/test/.Halite.key'),
         ));
         $connection = DriverManager::getConnection([
             'driver' => 'pdo_sqlite',

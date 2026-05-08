@@ -1,4 +1,4 @@
-# Doctrine Encryption Bundle
+# produman-org/doctrine-encryption
 
 Минимальный Symfony bundle для шифрования полей Doctrine-сущностей через один PHP-атрибут. Шифрование выполняется Halite, ключ хранится в отдельном файле.
 
@@ -15,7 +15,7 @@
 ## Установка
 
 ```bash
-composer require doctrine-encryption/doctrine-encryption-bundle
+composer require produman-org/doctrine-encryption
 ```
 
 Если Symfony Flex не подключил бандл автоматически, добавьте его вручную:
@@ -23,7 +23,7 @@ composer require doctrine-encryption/doctrine-encryption-bundle
 ```php
 // config/bundles.php
 return [
-    DoctrineEncryption\DoctrineEncryptionBundle::class => ['all' => true],
+    ProdumanOrg\DoctrineEncryption\DoctrineEncryptionBundle::class => ['all' => true],
 ];
 ```
 
@@ -47,7 +47,7 @@ config/secrets/%kernel.environment%/.Halite.key
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use DoctrineEncryption\Attribute\Encrypted;
+use ProdumanOrg\DoctrineEncryption\Attribute\Encrypted;
 
 #[ORM\Entity]
 final class Customer

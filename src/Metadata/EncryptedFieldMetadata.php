@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Metadata;
+namespace ProdumanOrg\DoctrineEncryption\Metadata;
 
 use ReflectionProperty;
 
@@ -11,7 +11,8 @@ final readonly class EncryptedFieldMetadata
     public function __construct(
         public string $name,
         private ReflectionProperty $property,
-    ) {}
+    ) {
+    }
 
     public function getValue(object $object): mixed
     {

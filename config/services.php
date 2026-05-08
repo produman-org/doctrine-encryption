@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
-use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
-use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
-use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use ProdumanOrg\DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
+use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $container): void {

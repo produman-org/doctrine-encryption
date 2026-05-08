@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\DependencyInjection;
+namespace ProdumanOrg\DoctrineEncryption\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -16,7 +16,7 @@ final class DoctrineEncryptionExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../../config'));
         $loader->load('services.php');
     }
 }

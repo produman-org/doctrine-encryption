@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\Support;
+namespace ProdumanOrg\DoctrineEncryption\Tests\Support;
 
 use BadMethodCallException;
 use Doctrine\Persistence\Mapping\ClassMetadata;
@@ -28,7 +28,7 @@ final class RecordingObjectManager implements ObjectManager
         return $this->unitOfWork;
     }
 
-    public function find(string $className, mixed $id): object|null
+    public function find(string $className, mixed $id): ?object
     {
         throw new BadMethodCallException('Not implemented.');
     }

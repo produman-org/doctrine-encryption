@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Tests\DependencyInjection;
+namespace ProdumanOrg\DoctrineEncryption\Tests\DependencyInjection;
 
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
-use DoctrineEncryption\DependencyInjection\DoctrineEncryptionExtension;
-use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
-use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use PHPUnit\Framework\TestCase;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\DependencyInjection\DoctrineEncryptionExtension;
+use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use ProdumanOrg\DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class DoctrineEncryptionExtensionTest extends TestCase

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in([
-        __DIR__ . '/config',
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
+        __DIR__.'/config',
+        __DIR__.'/src',
+        __DIR__.'/tests',
     ])
     ->append([
         __FILE__,
@@ -16,6 +16,7 @@ return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
         '@PER-CS2.0' => true,
+        '@Symfony' => true,
         '@PHP82Migration' => true,
         'array_syntax' => ['syntax' => 'short'],
         'declare_strict_types' => true,
@@ -34,6 +35,7 @@ return (new PhpCsFixer\Config())
         ],
         'phpdoc_order' => true,
         'phpdoc_to_comment' => false,
+        'yoda_style' => true,
         'single_line_throw' => false,
     ])
     ->setFinder($finder);

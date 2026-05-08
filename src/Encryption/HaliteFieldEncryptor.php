@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\Encryption;
+namespace ProdumanOrg\DoctrineEncryption\Encryption;
 
-use DoctrineEncryption\Contract\CiphertextDetectorInterface;
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 use ParagonIE\HiddenString\HiddenString;
+use ProdumanOrg\DoctrineEncryption\Contract\CiphertextDetectorInterface;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
 use RuntimeException;
 
 final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextDetectorInterface
@@ -18,20 +18,22 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
     private ?EncryptionKey $key = null;
 
-    public function __construct(private readonly string $keyFile) {}
+    public function __construct(private readonly string $keyFile)
+    {
+    }
 
     public function encrypt(?string $value): ?string
     {
-        if ($value === null) {
+        if (null === $value) {
             return null;
         }
 
-        return self::CIPHERTEXT_PREFIX . Crypto::encrypt(new HiddenString($value), $this->key());
+        return self::CIPHERTEXT_PREFIX.Crypto::encrypt(new HiddenString($value), $this->key());
     }
 
     public function decrypt(?string $value): ?string
     {
-        if ($value === null) {
+        if (null === $value) {
             return null;
         }
 
@@ -44,12 +46,12 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
     public function isCiphertext(?string $value): bool
     {
-        return $value !== null && str_starts_with($value, self::CIPHERTEXT_PREFIX);
+        return null !== $value && str_starts_with($value, self::CIPHERTEXT_PREFIX);
     }
 
     private function key(): EncryptionKey
     {
-        if ($this->key !== null) {
+        if (null !== $this->key) {
             return $this->key;
         }
 
@@ -60,7 +62,7 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
     private function ensureKeyFileExists(): void
     {
-        if ($this->keyFile === '') {
+        if ('' === $this->keyFile) {
             throw new RuntimeException('Halite encryption key file path must not be empty.');
         }
 
@@ -74,10 +76,10 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
             throw new RuntimeException(sprintf('Unable to create Halite key directory "%s".', $directory));
         }
 
-        $lockFile = $this->keyFile . '.lock';
+        $lockFile = $this->keyFile.'.lock';
         $lockHandle = fopen($lockFile, 'c');
 
-        if ($lockHandle === false) {
+        if (false === $lockHandle) {
             throw new RuntimeException(sprintf('Unable to open Halite key lock file "%s".', $lockFile));
         }
 

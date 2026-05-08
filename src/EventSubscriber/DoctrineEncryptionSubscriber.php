@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DoctrineEncryption\EventSubscriber;
+namespace ProdumanOrg\DoctrineEncryption\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\PreUpdateEventArgs as OrmPreUpdateEventArgs;
@@ -11,10 +11,10 @@ use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Event\OnClearEventArgs;
 use Doctrine\Persistence\Event\PreUpdateEventArgs as PersistencePreUpdateEventArgs;
 use Doctrine\Persistence\ObjectManager;
-use DoctrineEncryption\Contract\CiphertextDetectorInterface;
-use DoctrineEncryption\Contract\FieldEncryptorInterface;
-use DoctrineEncryption\Metadata\EncryptedFieldMetadata;
-use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use ProdumanOrg\DoctrineEncryption\Contract\CiphertextDetectorInterface;
+use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadata;
+use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use SplObjectStorage;
 use UnexpectedValueException;
 
@@ -55,7 +55,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $object = $args->getObject();
         $fields = $this->metadataFactory->forObject($object);
 
-        if ($fields === []) {
+        if ([] === $fields) {
             return;
         }
 
@@ -70,7 +70,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $object = $args->getObject();
         $fields = $this->metadataFactory->forObject($object);
 
-        if ($fields === []) {
+        if ([] === $fields) {
             return;
         }
 
@@ -96,13 +96,13 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     {
         $object = $args->getObject();
         $changedFieldNames = $this->changedFieldNames($args);
-        $fields = $changedFieldNames === null
+        $fields = null === $changedFieldNames
             ? $this->metadataFactory->forObject($object)
             : $this->metadataFactory->forObjectFieldNames($object, $changedFieldNames);
         $encryptedFieldValues = [];
         $rememberedFieldValues = $this->takeRememberedFieldValues($object);
 
-        if ($fields === [] && $rememberedFieldValues === []) {
+        if ([] === $fields && [] === $rememberedFieldValues) {
             return;
         }
 
@@ -115,11 +115,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
             $value = $field->getValue($object);
 
-            if ($value !== null && !is_string($value)) {
+            if (null !== $value && !is_string($value)) {
                 throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
-            if ($value === null) {
+            if (null === $value) {
                 $this->setNewValueIfChanged($args, $field->name, null);
 
                 continue;
@@ -184,11 +184,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
             $value = $field->getValue($object);
 
-            if ($value !== null && !is_string($value)) {
+            if (null !== $value && !is_string($value)) {
                 throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
-            if ($value === null) {
+            if (null === $value) {
                 continue;
             }
 
@@ -201,6 +201,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
     /**
      * @param list<EncryptedFieldMetadata> $fields
+     *
      * @return array<string, string|null>
      */
     private function decryptObjectFields(object $object, array $fields): array
@@ -214,11 +215,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
             $value = $field->getValue($object);
 
-            if ($value !== null && !is_string($value)) {
+            if (null !== $value && !is_string($value)) {
                 throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
-            if ($value === null) {
+            if (null === $value) {
                 continue;
             }
 
@@ -239,7 +240,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
      */
     private function rememberEncryptedFieldValues(object $object, array $fieldValues): void
     {
-        if ($fieldValues === []) {
+        if ([] === $fieldValues) {
             return;
         }
 
@@ -297,7 +298,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
      */
     private function restoreRememberedFieldValues(object $object, array $rememberedFieldValues): array
     {
-        if ($rememberedFieldValues === []) {
+        if ([] === $rememberedFieldValues) {
             return [];
         }
 
@@ -315,11 +316,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
     /**
      * @param LifecycleEventArgs<ObjectManager> $args
-     * @param array<string, string|null> $fieldValues
+     * @param array<string, string|null>        $fieldValues
      */
     private function syncOriginalFieldValues(LifecycleEventArgs $args, object $object, array $fieldValues): void
     {
-        if ($fieldValues === []) {
+        if ([] === $fieldValues) {
             return;
         }
 

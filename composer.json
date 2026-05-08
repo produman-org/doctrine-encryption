@@ -1,16 +1,16 @@
 {
-    "name": "doctrine-encryption/doctrine-encryption-bundle",
+    "name": "produman-org/doctrine-encryption",
     "description": "A small Symfony bundle that encrypts Doctrine entity fields with Halite.",
     "type": "symfony-bundle",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "DoctrineEncryption\\": "src/"
+            "ProdumanOrg\\DoctrineEncryption\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "DoctrineEncryption\\Tests\\": "tests/"
+            "ProdumanOrg\\DoctrineEncryption\\Tests\\": "tests/"
         }
     },
     "require": {

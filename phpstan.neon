@@ -4,3 +4,5 @@ parameters:
         - src
         - tests
     tmpDir: var/phpstan
+    parallel:
+        maximumNumberOfProcesses: 1

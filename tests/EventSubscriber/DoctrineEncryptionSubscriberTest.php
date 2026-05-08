@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Tests\EventSubscriber;
 
+use Doctrine\ORM\Events;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\OnClearEventArgs;
+use Doctrine\Persistence\Event\PreUpdateEventArgs;
+use Doctrine\Persistence\ObjectManager;
 use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
@@ -11,11 +16,6 @@ use DoctrineEncryption\Tests\Fixtures\PublicNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
 use DoctrineEncryption\Tests\Support\InMemoryFieldEncryptor;
 use DoctrineEncryption\Tests\Support\RecordingObjectManager;
-use Doctrine\ORM\Events;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\Persistence\Event\OnClearEventArgs;
-use Doctrine\Persistence\Event\PreUpdateEventArgs;
-use Doctrine\Persistence\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
 final class DoctrineEncryptionSubscriberTest extends TestCase

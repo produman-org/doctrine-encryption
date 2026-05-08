@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace DoctrineEncryption\Tests\Encryption;
 
 use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use FilesystemIterator;
 use ParagonIE\Halite\KeyFactory;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 
 final class HaliteFieldEncryptorTest extends TestCase
 {
@@ -18,7 +22,7 @@ final class HaliteFieldEncryptorTest extends TestCase
         $this->keyDirectory = sys_get_temp_dir() . '/doctrine-encryption-' . bin2hex(random_bytes(8));
         $this->keyFile = $this->keyDirectory . '/config/secrets/test/.Halite.key';
 
-        self::assertTrue(mkdir(dirname($this->keyFile), 0700, true));
+        self::assertTrue(mkdir(dirname($this->keyFile), 0o700, true));
         KeyFactory::save(KeyFactory::generateEncryptionKey(), $this->keyFile);
     }
 
@@ -73,7 +77,7 @@ final class HaliteFieldEncryptorTest extends TestCase
     {
         $encryptor = new HaliteFieldEncryptor('');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Halite encryption key file path must not be empty.');
 
         $encryptor->encrypt('top secret');
@@ -85,9 +89,9 @@ final class HaliteFieldEncryptorTest extends TestCase
             return;
         }
 
-        foreach (new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
         ) as $item) {
             if ($item->isDir()) {
                 rmdir($item->getPathname());

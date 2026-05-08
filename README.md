@@ -85,6 +85,7 @@ final class Customer
 composer install
 vendor/bin/phpunit
 vendor/bin/phpstan analyse
+vendor/bin/php-cs-fixer fix --dry-run --diff
 ```
 
 Также доступны composer scripts:
@@ -92,4 +93,6 @@ vendor/bin/phpstan analyse
 ```bash
 composer test
 composer analyse
+composer cs-check
+composer cs-fix
 ```

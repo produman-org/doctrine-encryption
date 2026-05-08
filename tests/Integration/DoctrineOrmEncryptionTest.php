@@ -14,7 +14,10 @@ use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
 use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use DoctrineEncryption\Tests\Fixtures\OrmSecretNote;
+use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 final class DoctrineOrmEncryptionTest extends TestCase
 {
@@ -182,9 +185,9 @@ final class DoctrineOrmEncryptionTest extends TestCase
             return;
         }
 
-        foreach (new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
         ) as $item) {
             if ($item->isDir()) {
                 rmdir($item->getPathname());

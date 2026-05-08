@@ -6,9 +6,9 @@ namespace DoctrineEncryption\Tests\Metadata;
 
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use DoctrineEncryption\Tests\Fixtures\InheritableSecretNote;
-use DoctrineEncryption\Tests\Fixtures\SecretNoteProxy;
 use DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
+use DoctrineEncryption\Tests\Fixtures\SecretNoteProxy;
 use PHPUnit\Framework\TestCase;
 
 final class EncryptedFieldMetadataFactoryTest extends TestCase
@@ -18,7 +18,7 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
         $factory = new EncryptedFieldMetadataFactory();
 
         $fields = $factory->forObject(new SecretNote('public', 'secret'));
-        $names = array_map(static fn ($field): string => $field->name, $fields);
+        $names = array_map(static fn($field): string => $field->name, $fields);
 
         self::assertSame(['secret', 'nullableSecret'], $names);
     }
@@ -45,7 +45,7 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
             'missing',
         ]);
 
-        self::assertSame(['nullableSecret'], array_map(static fn ($field): string => $field->name, $fields));
+        self::assertSame(['nullableSecret'], array_map(static fn($field): string => $field->name, $fields));
     }
 
     public function testEncryptedFieldsCanDetectUninitializedProperties(): void
@@ -62,7 +62,7 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
 
         $fields = $factory->forObject(new SecretNoteProxy('secret'));
 
-        self::assertSame(['secret'], array_map(static fn ($field): string => $field->name, $fields));
+        self::assertSame(['secret'], array_map(static fn($field): string => $field->name, $fields));
     }
 
     public function testDoctrineProxyObjectsReuseParentClassMetadata(): void

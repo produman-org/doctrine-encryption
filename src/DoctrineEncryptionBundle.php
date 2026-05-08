@@ -6,6 +6,4 @@ namespace DoctrineEncryption;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-final class DoctrineEncryptionBundle extends Bundle
-{
-}
+final class DoctrineEncryptionBundle extends Bundle {}

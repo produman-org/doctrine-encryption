@@ -10,6 +10,7 @@ use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 use ParagonIE\HiddenString\HiddenString;
+use RuntimeException;
 
 final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextDetectorInterface
 {
@@ -17,9 +18,7 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
     private ?EncryptionKey $key = null;
 
-    public function __construct(private readonly string $keyFile)
-    {
-    }
+    public function __construct(private readonly string $keyFile) {}
 
     public function encrypt(?string $value): ?string
     {
@@ -62,7 +61,7 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
     private function ensureKeyFileExists(): void
     {
         if ($this->keyFile === '') {
-            throw new \RuntimeException('Halite encryption key file path must not be empty.');
+            throw new RuntimeException('Halite encryption key file path must not be empty.');
         }
 
         if (is_file($this->keyFile)) {
@@ -71,22 +70,22 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
         $directory = dirname($this->keyFile);
 
-        if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
-            throw new \RuntimeException(sprintf('Unable to create Halite key directory "%s".', $directory));
+        if (!is_dir($directory) && !mkdir($directory, 0o700, true) && !is_dir($directory)) {
+            throw new RuntimeException(sprintf('Unable to create Halite key directory "%s".', $directory));
         }
 
         $lockFile = $this->keyFile . '.lock';
         $lockHandle = fopen($lockFile, 'c');
 
         if ($lockHandle === false) {
-            throw new \RuntimeException(sprintf('Unable to open Halite key lock file "%s".', $lockFile));
+            throw new RuntimeException(sprintf('Unable to open Halite key lock file "%s".', $lockFile));
         }
 
-        chmod($lockFile, 0600);
+        chmod($lockFile, 0o600);
 
         try {
             if (!flock($lockHandle, LOCK_EX)) {
-                throw new \RuntimeException(sprintf('Unable to lock Halite key lock file "%s".', $lockFile));
+                throw new RuntimeException(sprintf('Unable to lock Halite key lock file "%s".', $lockFile));
             }
 
             if (is_file($this->keyFile)) {
@@ -101,13 +100,13 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
             try {
                 KeyFactory::save(KeyFactory::generateEncryptionKey(), $temporaryKeyFile);
-                chmod($temporaryKeyFile, 0600);
+                chmod($temporaryKeyFile, 0o600);
 
                 if (!rename($temporaryKeyFile, $this->keyFile)) {
-                    throw new \RuntimeException(sprintf('Unable to move generated Halite key file to "%s".', $this->keyFile));
+                    throw new RuntimeException(sprintf('Unable to move generated Halite key file to "%s".', $this->keyFile));
                 }
 
-                chmod($this->keyFile, 0600);
+                chmod($this->keyFile, 0o600);
             } finally {
                 if (is_file($temporaryKeyFile)) {
                     unlink($temporaryKeyFile);

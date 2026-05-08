@@ -25,12 +25,15 @@
     },
     "require-dev": {
         "ext-pdo_sqlite": "*",
+        "friendsofphp/php-cs-fixer": "^3.75",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0",
         "symfony/var-exporter": "^6.4 || ^7.4 || ^8.0"
     },
     "scripts": {
         "analyse": "phpstan analyse",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
         "test": "phpunit"
     },
     "config": {

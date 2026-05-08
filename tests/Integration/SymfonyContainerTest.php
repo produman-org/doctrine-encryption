@@ -8,7 +8,10 @@ use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use DoctrineEncryption\DoctrineEncryptionBundle;
 use DoctrineEncryption\Encryption\HaliteFieldEncryptor;
 use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
+use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -62,9 +65,9 @@ final class SymfonyContainerTest extends TestCase
             return;
         }
 
-        foreach (new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
         ) as $item) {
             if ($item->isDir()) {
                 rmdir($item->getPathname());

@@ -11,9 +11,7 @@ use Doctrine\Persistence\Proxy;
  */
 final readonly class SecretNoteProxy extends InheritableSecretNote implements Proxy
 {
-    public function __load(): void
-    {
-    }
+    public function __load(): void {}
 
     public function __isInitialized(): bool
     {

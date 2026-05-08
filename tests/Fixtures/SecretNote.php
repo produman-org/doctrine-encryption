@@ -14,8 +14,7 @@ final class SecretNote
         private ?string $secret,
         #[Encrypted]
         private ?string $nullableSecret = null,
-    ) {
-    }
+    ) {}
 
     public function getSecret(): ?string
     {

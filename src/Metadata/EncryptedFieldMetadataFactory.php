@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Metadata;
 
-use DoctrineEncryption\Attribute\Encrypted;
 use Doctrine\Persistence\Proxy;
+use DoctrineEncryption\Attribute\Encrypted;
+use ReflectionClass;
 
 final class EncryptedFieldMetadataFactory
 {
@@ -82,7 +83,7 @@ final class EncryptedFieldMetadataFactory
     {
         $fields = [];
         $seen = [];
-        $reflection = new \ReflectionClass($class);
+        $reflection = new ReflectionClass($class);
 
         do {
             foreach ($reflection->getProperties() as $property) {

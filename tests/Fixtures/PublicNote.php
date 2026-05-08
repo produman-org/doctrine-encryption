@@ -6,7 +6,5 @@ namespace DoctrineEncryption\Tests\Fixtures;
 
 final readonly class PublicNote
 {
-    public function __construct(public ?string $title)
-    {
-    }
+    public function __construct(public ?string $title) {}
 }

@@ -15,19 +15,21 @@ use DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadata;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use SplObjectStorage;
+use UnexpectedValueException;
 
 final class DoctrineEncryptionSubscriber implements EventSubscriber
 {
     /**
-     * @var \SplObjectStorage<object, array<string, string>>
+     * @var SplObjectStorage<object, array<string, string>>
      */
-    private \SplObjectStorage $encryptedFieldValuesByObject;
+    private SplObjectStorage $encryptedFieldValuesByObject;
 
     public function __construct(
         private readonly EncryptedFieldMetadataFactory $metadataFactory,
         private readonly FieldEncryptorInterface $encryptor,
     ) {
-        $this->encryptedFieldValuesByObject = new \SplObjectStorage();
+        $this->encryptedFieldValuesByObject = new SplObjectStorage();
     }
 
     /**
@@ -114,7 +116,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
-                throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
             if ($value === null) {
@@ -150,7 +152,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
      */
     public function onClear(OnClearEventArgs $args): void
     {
-        $this->encryptedFieldValuesByObject = new \SplObjectStorage();
+        $this->encryptedFieldValuesByObject = new SplObjectStorage();
     }
 
     /**
@@ -183,7 +185,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
-                throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
             if ($value === null) {
@@ -213,7 +215,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
-                throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
             }
 
             if ($value === null) {

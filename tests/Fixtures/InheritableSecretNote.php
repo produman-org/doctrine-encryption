@@ -11,8 +11,7 @@ readonly class InheritableSecretNote
     public function __construct(
         #[Encrypted]
         private ?string $secret,
-    ) {
-    }
+    ) {}
 
     public function getSecret(): ?string
     {

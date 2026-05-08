@@ -42,3 +42,6 @@ jobs:
 
       - name: Run static analysis
         run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Check coding standards
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff

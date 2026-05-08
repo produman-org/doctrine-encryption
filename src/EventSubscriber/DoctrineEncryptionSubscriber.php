@@ -8,6 +8,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Event\OnClearEventArgs;
+use DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadata;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
@@ -50,8 +51,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             return;
         }
 
-        $this->decryptObjectFields($object, $fields);
-        $this->syncOriginalData($args, $object, $fields);
+        $this->syncOriginalFieldValues($args, $object, $this->decryptObjectFields($object, $fields));
     }
 
     public function prePersist(LifecycleEventArgs $args): void
@@ -203,9 +203,12 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
     /**
      * @param list<EncryptedFieldMetadata> $fields
+     * @return array<string, string|null>
      */
-    private function decryptObjectFields(object $object, array $fields): void
+    private function decryptObjectFields(object $object, array $fields): array
     {
+        $decryptedFieldValues = [];
+
         foreach ($fields as $field) {
             if (!$field->isInitialized($object)) {
                 continue;
@@ -221,8 +224,16 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
                 continue;
             }
 
-            $field->setValue($object, $this->encryptor->decrypt($value));
+            if ($this->encryptor instanceof CiphertextDetectorInterface && !$this->encryptor->isCiphertext($value)) {
+                continue;
+            }
+
+            $decryptedValue = $this->encryptor->decrypt($value);
+            $field->setValue($object, $decryptedValue);
+            $decryptedFieldValues[$field->name] = $decryptedValue;
         }
+
+        return $decryptedFieldValues;
     }
 
     /**
@@ -303,7 +314,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     }
 
     /**
-     * @param array<string, string> $fieldValues
+     * @param array<string, string|null> $fieldValues
      */
     private function syncOriginalFieldValues(LifecycleEventArgs $args, object $object, array $fieldValues): void
     {

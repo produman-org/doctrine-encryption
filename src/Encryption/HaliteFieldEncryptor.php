@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Encryption;
 
+use DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 use ParagonIE\HiddenString\HiddenString;
 
-final class HaliteFieldEncryptor implements FieldEncryptorInterface
+final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextDetectorInterface
 {
     private const CIPHERTEXT_PREFIX = 'doctrine-encryption:halite:v1:';
 
@@ -35,11 +36,16 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
             return null;
         }
 
-        if (!str_starts_with($value, self::CIPHERTEXT_PREFIX)) {
+        if (!$this->isCiphertext($value)) {
             return $value;
         }
 
         return Crypto::decrypt(substr($value, strlen(self::CIPHERTEXT_PREFIX)), $this->key())->getString();
+    }
+
+    public function isCiphertext(?string $value): bool
+    {
+        return $value !== null && str_starts_with($value, self::CIPHERTEXT_PREFIX);
     }
 
     private function key(): EncryptionKey

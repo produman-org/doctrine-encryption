@@ -41,14 +41,21 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
     public function testPostLoadDecryptsEncryptedFieldsAndSyncsOriginalData(): void
     {
         $objectManager = new RecordingObjectManager();
-        $note = new SecretNote('public', 'enc:secret');
+        $note = new SecretNote('public', 'enc:secret', 'legacy nullable');
         $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
 
         $subscriber->postLoad(new LifecycleEventArgs($note, $objectManager));
 
         self::assertSame('secret', $note->getSecret());
+        self::assertSame('legacy nullable', $note->getNullableSecret());
         self::assertSame(1, $objectManager->getUnitOfWorkCalls);
-        self::assertSame('secret', $objectManager->unitOfWork->originalEntityProperties[0]['value']);
+        self::assertSame([
+            [
+                'objectId' => spl_object_id($note),
+                'property' => 'secret',
+                'value' => 'secret',
+            ],
+        ], $objectManager->unitOfWork->originalEntityProperties);
     }
 
     public function testPostLoadSkipsUninitializedEncryptedFieldsWhenSyncingOriginalData(): void
@@ -58,7 +65,21 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
 
         $subscriber->postLoad(new LifecycleEventArgs(new PartialSecretNote(), $objectManager));
 
-        self::assertSame(1, $objectManager->getUnitOfWorkCalls);
+        self::assertSame(0, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([], $objectManager->unitOfWork->originalEntityProperties);
+    }
+
+    public function testPostLoadSkipsUnitOfWorkWhenEncryptedFieldsAreNull(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $note = new SecretNote('public', null, null);
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+
+        $subscriber->postLoad(new LifecycleEventArgs($note, $objectManager));
+
+        self::assertNull($note->getSecret());
+        self::assertNull($note->getNullableSecret());
+        self::assertSame(0, $objectManager->getUnitOfWorkCalls);
         self::assertSame([], $objectManager->unitOfWork->originalEntityProperties);
     }
 

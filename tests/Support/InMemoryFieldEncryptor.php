@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Tests\Support;
 
+use DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 
-final class InMemoryFieldEncryptor implements FieldEncryptorInterface
+final class InMemoryFieldEncryptor implements FieldEncryptorInterface, CiphertextDetectorInterface
 {
     /**
      * @var list<string|null>
@@ -29,6 +30,11 @@ final class InMemoryFieldEncryptor implements FieldEncryptorInterface
     {
         $this->decryptedValues[] = $value;
 
-        return $value === null ? null : substr($value, 4);
+        return $this->isCiphertext($value) ? substr((string) $value, 4) : $value;
+    }
+
+    public function isCiphertext(?string $value): bool
+    {
+        return $value !== null && str_starts_with($value, 'enc:');
     }
 }

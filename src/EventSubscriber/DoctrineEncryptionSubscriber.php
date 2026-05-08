@@ -7,6 +7,7 @@ namespace DoctrineEncryption\EventSubscriber;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\OnClearEventArgs;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 
@@ -35,6 +36,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             Events::postPersist,
             Events::preUpdate,
             Events::postUpdate,
+            Events::onClear,
         ];
     }
 
@@ -50,6 +52,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     {
         $object = $args->getObject();
 
+        $this->decryptRememberedFields($object);
         $this->rememberEncryptedFields($object, $this->encryptObject($object));
     }
 
@@ -66,8 +69,14 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $object = $args->getObject();
         $encryptedFields = [];
 
+        $this->decryptRememberedFields($object);
+
         foreach ($this->metadataFactory->forObject($object) as $field) {
             if (method_exists($args, 'hasChangedField') && !$args->hasChangedField($field->name)) {
+                continue;
+            }
+
+            if (!$field->isInitialized($object)) {
                 continue;
             }
 
@@ -75,6 +84,14 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
             if ($value !== null && !is_string($value)) {
                 throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+            }
+
+            if ($value === null) {
+                if (method_exists($args, 'hasChangedField') && $args->hasChangedField($field->name)) {
+                    $args->setNewValue($field->name, null);
+                }
+
+                continue;
             }
 
             $encrypted = $this->encryptor->encrypt($value);
@@ -101,6 +118,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->syncOriginalData($args, $object);
     }
 
+    public function onClear(OnClearEventArgs $args): void
+    {
+        $this->encryptedFieldsByObject = new \SplObjectStorage();
+    }
+
     /**
      * @return list<string>
      */
@@ -109,10 +131,18 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $encryptedFields = [];
 
         foreach ($this->metadataFactory->forObject($object) as $field) {
+            if (!$field->isInitialized($object)) {
+                continue;
+            }
+
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
                 throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+            }
+
+            if ($value === null) {
+                continue;
             }
 
             $field->setValue($object, $this->encryptor->encrypt($value));
@@ -125,10 +155,18 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     public function decryptObject(object $object): void
     {
         foreach ($this->metadataFactory->forObject($object) as $field) {
+            if (!$field->isInitialized($object)) {
+                continue;
+            }
+
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
                 throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+            }
+
+            if ($value === null) {
+                continue;
             }
 
             $field->setValue($object, $this->encryptor->decrypt($value));
@@ -172,10 +210,18 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
                 continue;
             }
 
+            if (!$field->isInitialized($object)) {
+                continue;
+            }
+
             $value = $field->getValue($object);
 
             if ($value !== null && !is_string($value)) {
                 throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+            }
+
+            if ($value === null) {
+                continue;
             }
 
             $field->setValue($object, $this->encryptor->decrypt($value));

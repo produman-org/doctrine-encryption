@@ -42,7 +42,15 @@ final class HaliteFieldEncryptorTest extends TestCase
 
         self::assertIsString($ciphertext);
         self::assertNotSame('top secret', $ciphertext);
+        self::assertStringStartsWith('doctrine-encryption:halite:v1:', $ciphertext);
         self::assertSame('top secret', $encryptor->decrypt($ciphertext));
+    }
+
+    public function testItReturnsPlaintextValuesWithoutCiphertextPrefixAsIs(): void
+    {
+        $encryptor = new HaliteFieldEncryptor($this->keyFile);
+
+        self::assertSame('legacy plaintext', $encryptor->decrypt('legacy plaintext'));
     }
 
     public function testItCreatesMissingKeyFile(): void

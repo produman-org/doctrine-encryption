@@ -302,6 +302,10 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $objectId = spl_object_id($object);
 
         foreach ($fields as $field) {
+            if (!$field->isInitialized($object)) {
+                continue;
+            }
+
             $unitOfWork->setOriginalEntityProperty($objectId, $field->name, $field->getValue($object));
         }
     }

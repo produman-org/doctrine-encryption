@@ -12,6 +12,8 @@ use ParagonIE\HiddenString\HiddenString;
 
 final class HaliteFieldEncryptor implements FieldEncryptorInterface
 {
+    private const CIPHERTEXT_PREFIX = 'doctrine-encryption:halite:v1:';
+
     private ?EncryptionKey $key = null;
 
     public function __construct(private readonly string $keyFile)
@@ -24,7 +26,7 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
             return null;
         }
 
-        return Crypto::encrypt(new HiddenString($value), $this->key());
+        return self::CIPHERTEXT_PREFIX . Crypto::encrypt(new HiddenString($value), $this->key());
     }
 
     public function decrypt(?string $value): ?string
@@ -33,7 +35,11 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
             return null;
         }
 
-        return Crypto::decrypt($value, $this->key())->getString();
+        if (!str_starts_with($value, self::CIPHERTEXT_PREFIX)) {
+            return $value;
+        }
+
+        return Crypto::decrypt(substr($value, strlen(self::CIPHERTEXT_PREFIX)), $this->key())->getString();
     }
 
     private function key(): EncryptionKey

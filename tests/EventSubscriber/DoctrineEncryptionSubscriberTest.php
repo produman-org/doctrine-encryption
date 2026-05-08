@@ -6,6 +6,7 @@ namespace DoctrineEncryption\Tests\EventSubscriber;
 
 use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
 use DoctrineEncryption\Tests\Fixtures\PublicNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
 use DoctrineEncryption\Tests\Support\InMemoryFieldEncryptor;
@@ -48,6 +49,17 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         self::assertSame('secret', $note->getSecret());
         self::assertSame(1, $objectManager->getUnitOfWorkCalls);
         self::assertSame('secret', $objectManager->unitOfWork->originalEntityProperties[0]['value']);
+    }
+
+    public function testPostLoadSkipsUninitializedEncryptedFieldsWhenSyncingOriginalData(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+
+        $subscriber->postLoad(new LifecycleEventArgs(new PartialSecretNote(), $objectManager));
+
+        self::assertSame(1, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([], $objectManager->unitOfWork->originalEntityProperties);
     }
 
     public function testItEncryptsBeforePersistAndRestoresPlaintextAfterPersist(): void

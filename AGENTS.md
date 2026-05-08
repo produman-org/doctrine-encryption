@@ -1,49 +1,49 @@
-# Project Agents
+# Инструкции для проекта
 
-## Scope
+## Область
 
-- Repository: produman-org/doctrine-encryption.
-- Purpose: Symfony bundle for encrypting Doctrine entity fields with Halite.
-- Public surface: a single `#[Encrypted]` attribute, one encryptor service, one Doctrine subscriber, and bundle auto-registration.
-- Preferred model for work in this repository: GPT-5.5.
+- Репозиторий: `produman-org/doctrine-encryption`.
+- Назначение: Symfony-бандл для шифрования полей Doctrine-сущностей через Halite.
+- Публичная поверхность: один атрибут `#[Encrypted]`, один сервис-шифровальщик, один Doctrine-subscriber и автоподключение бандла.
+- Предпочтительная модель для работы в этом репозитории: GPT-5.5.
 
-## Architecture
+## Архитектура
 
-- `src/Attribute/Encrypted.php`: marker attribute for Doctrine entity properties.
-- `src/Encryption/HaliteFieldEncryptor.php`: Halite-backed implementation of `FieldEncryptorInterface`.
-- `src/EventSubscriber/DoctrineEncryptionSubscriber.php`: Doctrine lifecycle subscriber that encrypts/decrypts entity fields.
-- `src/Metadata/EncryptedFieldMetadataFactory.php`: reflection-based metadata cache for encrypted properties.
-- `src/Metadata/EncryptedFieldMetadata.php`: thin value object around `ReflectionProperty`.
-- `src/DependencyInjection/DoctrineEncryptionExtension.php` and `config/services.php`: Symfony service registration.
-- `src/DoctrineEncryptionBundle.php`: bundle entry point.
+- `src/Attribute/Encrypted.php`: маркерный атрибут для свойств Doctrine-сущностей.
+- `src/Encryption/HaliteFieldEncryptor.php`: реализация `FieldEncryptorInterface` на базе Halite.
+- `src/EventSubscriber/DoctrineEncryptionSubscriber.php`: Doctrine lifecycle subscriber, который шифрует и расшифровывает поля сущностей.
+- `src/Metadata/EncryptedFieldMetadataFactory.php`: reflection-based кеш метаданных для зашифрованных свойств.
+- `src/Metadata/EncryptedFieldMetadata.php`: тонкий value object вокруг `ReflectionProperty`.
+- `src/DependencyInjection/DoctrineEncryptionExtension.php` и `config/services.php`: регистрация сервисов Symfony.
+- `src/DoctrineEncryptionBundle.php`: точка входа бандла.
 
-## Runtime Rules
+## Правила рантайма
 
-- Treat the bundle as a reusable library, not an application.
-- Keep the API small and explicit. Avoid new configuration unless the request clearly needs it.
-- Do not mark Doctrine ORM entities or mutable Symfony/Doctrine infrastructure as `readonly` unless the runtime behavior is proven safe.
-- Keep the key file path as `config/secrets/%kernel.environment%/.Halite.key`.
-- Preserve the ciphertext prefix contract used by `HaliteFieldEncryptor`.
-- Do not silently change behavior for legacy plaintext values, bulk DQL/DBAL operations, or Doctrine proxy handling.
+- Относиться к бандлу как к переиспользуемой библиотеке, а не к приложению.
+- Держать API маленьким и явным. Не добавлять новую конфигурацию, если этого прямо не требует задача.
+- Не помечать Doctrine ORM entities или изменяемую инфраструктуру Symfony/Doctrine как `readonly`, если корректность такого решения не доказана.
+- Сохранять путь key file: `config/secrets/%kernel.environment%/.Halite.key`.
+- Сохранять контракт префикса ciphertext, который использует `HaliteFieldEncryptor`.
+- Не менять молча поведение для legacy plaintext-значений, bulk DQL/DBAL операций или обработки Doctrine proxy.
 
-## Editing Rules
+## Правила редактирования
 
-- Prefer existing local patterns over introducing new abstractions.
-- Keep edits tightly scoped to the requested behavior.
-- Do not revert user changes or unrelated edits.
-- Use `apply_patch` for manual file edits.
-- Prefer `lean-ctx -c` for shell commands in this workspace.
-- Default to ASCII unless the file already uses a different character set.
+- Предпочитать локальные существующие паттерны, а не вводить новые абстракции.
+- Держать изменения строго в рамках запрошенного поведения.
+- Не откатывать пользовательские изменения или несвязанные правки.
+- Для ручного редактирования использовать `apply_patch`.
+- Для shell-команд в этом workspace предпочитать `lean-ctx -c`.
+- По умолчанию использовать ASCII, если файл уже не использует другой набор символов.
 
-## Testing Rules
+## Правила тестирования
 
-- Unit tests live under `tests/` and should stay small and behavior-focused.
-- Integration tests should cover real Doctrine ORM and Symfony container behavior when the change touches runtime wiring or flush behavior.
-- Keep test fixtures simple and explicit.
-- If behavior changes, update the README and any relevant test doubles in the same change.
-- Run `vendor/bin/phpunit`, `vendor/bin/phpstan analyse --no-progress`, and `composer cs-check` after nontrivial changes.
+- Unit-тесты живут в `tests/` и должны оставаться небольшими и ориентированными на поведение.
+- Интеграционные тесты должны покрывать реальный Doctrine ORM и Symfony container, когда изменение затрагивает runtime wiring или flush-поведение.
+- Тестовые фикстуры держать простыми и явными.
+- Если поведение меняется, обновлять README и связанные test doubles в том же изменении.
+- После нетривиальных изменений запускать `vendor/bin/phpunit`, `vendor/bin/phpstan analyse --no-progress` и `composer cs-check`.
 
-## Commands
+## Команды
 
 - `composer install`
 - `vendor/bin/phpunit`
@@ -54,10 +54,10 @@
 - `composer cs-check`
 - `composer cs-fix`
 
-## Project Notes
+## Примечания по проекту
 
-- `.Halite.key` is created automatically in `config/secrets/%kernel.environment%/`.
-- `ext-sodium` is required at runtime.
-- `ext-pdo_sqlite` is required for the SQLite integration test suite.
-- Doctrine lifecycle events do not fire for bulk DQL/DBAL/raw SQL paths.
-- The repository uses README, PHPStan, PHPUnit, and PHP-CS-Fixer as the main correctness gates.
+- `.Halite.key` создается автоматически в `config/secrets/%kernel.environment%/`.
+- `ext-sodium` требуется во время выполнения.
+- `ext-pdo_sqlite` требуется для SQLite integration test suite.
+- Doctrine lifecycle events не срабатывают для bulk DQL/DBAL/raw SQL путей.
+- В качестве основных gates корректности репозиторий использует README, PHPStan, PHPUnit и PHP-CS-Fixer.

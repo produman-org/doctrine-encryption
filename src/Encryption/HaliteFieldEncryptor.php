@@ -76,6 +76,8 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
             throw new \RuntimeException(sprintf('Unable to open Halite key lock file "%s".', $lockFile));
         }
 
+        chmod($lockFile, 0600);
+
         try {
             if (!flock($lockHandle, LOCK_EX)) {
                 throw new \RuntimeException(sprintf('Unable to lock Halite key lock file "%s".', $lockFile));
@@ -93,10 +95,13 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
 
             try {
                 KeyFactory::save(KeyFactory::generateEncryptionKey(), $temporaryKeyFile);
+                chmod($temporaryKeyFile, 0600);
 
                 if (!rename($temporaryKeyFile, $this->keyFile)) {
                     throw new \RuntimeException(sprintf('Unable to move generated Halite key file to "%s".', $this->keyFile));
                 }
+
+                chmod($this->keyFile, 0600);
             } finally {
                 if (isset($temporaryKeyFile) && is_file($temporaryKeyFile)) {
                     unlink($temporaryKeyFile);

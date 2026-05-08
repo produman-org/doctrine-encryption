@@ -64,6 +64,8 @@ final class HaliteFieldEncryptorTest extends TestCase
 
         self::assertFileExists($keyFile);
         self::assertFileExists($keyFile . '.lock');
+        self::assertSame('0600', substr(sprintf('%o', fileperms($keyFile)), -4));
+        self::assertSame('0600', substr(sprintf('%o', fileperms($keyFile . '.lock')), -4));
         self::assertSame('top secret', (new HaliteFieldEncryptor($keyFile))->decrypt($ciphertext));
     }
 

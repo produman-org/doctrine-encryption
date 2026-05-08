@@ -1,5 +1,6 @@
 /.phpunit.cache/
 /vendor/
+/var/
 .idea/
 /config/secrets/*/.Halite.key
 /config/secrets/*/.Halite.key.lock

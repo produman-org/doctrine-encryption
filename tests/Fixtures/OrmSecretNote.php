@@ -34,6 +34,11 @@ final class OrmSecretNote
         return $this->id;
     }
 
+    public function setIdForTest(int $id): void
+    {
+        $this->id = $id;
+    }
+
     public function getTitle(): string
     {
         return $this->title;

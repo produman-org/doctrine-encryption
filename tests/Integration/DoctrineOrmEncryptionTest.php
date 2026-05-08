@@ -157,7 +157,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
         $connection = DriverManager::getConnection([
             'driver' => 'pdo_sqlite',
             'memory' => true,
-        ], $config, $eventManager);
+        ]);
         $entityManager = new EntityManager($connection, $config, $eventManager);
         $schemaTool = new SchemaTool($entityManager);
 

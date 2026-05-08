@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace DoctrineEncryption\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Event\PreUpdateEventArgs as OrmPreUpdateEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Event\OnClearEventArgs;
+use Doctrine\Persistence\Event\PreUpdateEventArgs as PersistencePreUpdateEventArgs;
+use Doctrine\Persistence\ObjectManager;
 use DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use DoctrineEncryption\Contract\FieldEncryptorInterface;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadata;
@@ -42,6 +45,9 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         ];
     }
 
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
     public function postLoad(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
@@ -54,6 +60,9 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->syncOriginalFieldValues($args, $object, $this->decryptObjectFields($object, $fields));
     }
 
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
     public function prePersist(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
@@ -67,6 +76,9 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->rememberEncryptedFieldValues($object, $this->encryptObjectFields($object, $fields));
     }
 
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
     public function postPersist(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
@@ -75,6 +87,9 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->syncOriginalFieldValues($args, $object, $fieldValues);
     }
 
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
     public function preUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
@@ -103,9 +118,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             }
 
             if ($value === null) {
-                if (method_exists($args, 'hasChangedField') && $args->hasChangedField($field->name)) {
-                    $args->setNewValue($field->name, null);
-                }
+                $this->setNewValueIfChanged($args, $field->name, null);
 
                 continue;
             }
@@ -114,14 +127,15 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $field->setValue($object, $encrypted);
             $encryptedFieldValues[$field->name] = $value;
 
-            if (method_exists($args, 'hasChangedField') && $args->hasChangedField($field->name)) {
-                $args->setNewValue($field->name, $encrypted);
-            }
+            $this->setNewValueIfChanged($args, $field->name, $encrypted);
         }
 
         $this->rememberEncryptedFieldValues($object, $encryptedFieldValues);
     }
 
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
     public function postUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
@@ -131,6 +145,9 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->syncOriginalFieldValues($args, $object, $fieldValues);
     }
 
+    /**
+     * @param OnClearEventArgs<ObjectManager> $args
+     */
     public function onClear(OnClearEventArgs $args): void
     {
         $this->encryptedFieldValuesByObject = new \SplObjectStorage();
@@ -231,15 +248,29 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     }
 
     /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     *
      * @return list<string>|null
      */
     private function changedFieldNames(LifecycleEventArgs $args): ?array
     {
-        if (!method_exists($args, 'getEntityChangeSet')) {
-            return null;
+        if ($args instanceof OrmPreUpdateEventArgs || $args instanceof PersistencePreUpdateEventArgs) {
+            return array_keys($args->getEntityChangeSet());
         }
 
-        return array_keys($args->getEntityChangeSet());
+        return null;
+    }
+
+    /**
+     * @param LifecycleEventArgs<ObjectManager> $args
+     */
+    private function setNewValueIfChanged(LifecycleEventArgs $args, string $fieldName, mixed $value): void
+    {
+        if ($args instanceof OrmPreUpdateEventArgs || $args instanceof PersistencePreUpdateEventArgs) {
+            if ($args->hasChangedField($fieldName)) {
+                $args->setNewValue($fieldName, $value);
+            }
+        }
     }
 
     /**
@@ -281,6 +312,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     }
 
     /**
+     * @param LifecycleEventArgs<ObjectManager> $args
      * @param array<string, string|null> $fieldValues
      */
     private function syncOriginalFieldValues(LifecycleEventArgs $args, object $object, array $fieldValues): void

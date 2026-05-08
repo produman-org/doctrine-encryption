@@ -6,6 +6,9 @@ namespace DoctrineEncryption\Tests\Fixtures;
 
 use Doctrine\Persistence\Proxy;
 
+/**
+ * @implements Proxy<InheritableSecretNote>
+ */
 final readonly class SecretNoteProxy extends InheritableSecretNote implements Proxy
 {
     public function __load(): void

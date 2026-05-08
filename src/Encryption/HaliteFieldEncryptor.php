@@ -109,7 +109,7 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface, CiphertextD
 
                 chmod($this->keyFile, 0600);
             } finally {
-                if (isset($temporaryKeyFile) && is_file($temporaryKeyFile)) {
+                if (is_file($temporaryKeyFile)) {
                     unlink($temporaryKeyFile);
                 }
             }

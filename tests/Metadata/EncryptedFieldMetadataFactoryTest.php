@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DoctrineEncryption\Tests\Metadata;
 
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use DoctrineEncryption\Tests\Fixtures\SecretNoteProxy;
 use DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
 use PHPUnit\Framework\TestCase;
@@ -39,5 +40,14 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
         $field = (new EncryptedFieldMetadataFactory())->forObject($note)[0];
 
         self::assertFalse($field->isInitialized($note));
+    }
+
+    public function testItFindsEncryptedPropertiesDeclaredOnParentClasses(): void
+    {
+        $factory = new EncryptedFieldMetadataFactory();
+
+        $fields = $factory->forObject(new SecretNoteProxy('secret'));
+
+        self::assertSame(['secret'], array_map(static fn ($field): string => $field->name, $fields));
     }
 }

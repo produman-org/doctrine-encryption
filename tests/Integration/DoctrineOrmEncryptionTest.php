@@ -77,6 +77,74 @@ final class DoctrineOrmEncryptionTest extends TestCase
         self::assertStringStartsWith('doctrine-encryption:halite:v1:', $changedStoredSecret);
     }
 
+    public function testItKeepsNullEncryptedFieldsNull(): void
+    {
+        $entityManager = $this->createEntityManager();
+
+        $note = new OrmSecretNote('public title', null);
+        $entityManager->persist($note);
+        $entityManager->flush();
+
+        $id = $note->getId();
+        self::assertIsInt($id);
+        self::assertNull($note->getSecret());
+        self::assertNull($this->fetchStoredSecret($entityManager, $id));
+
+        $entityManager->clear();
+
+        $reloadedNote = $entityManager->find(OrmSecretNote::class, $id);
+        self::assertInstanceOf(OrmSecretNote::class, $reloadedNote);
+        self::assertNull($reloadedNote->getSecret());
+
+        $reloadedNote->setSecret('now secret');
+        $entityManager->flush();
+
+        self::assertSame('now secret', $reloadedNote->getSecret());
+
+        $storedSecret = $this->fetchStoredSecret($entityManager, $id);
+        self::assertIsString($storedSecret);
+        self::assertStringStartsWith('doctrine-encryption:halite:v1:', $storedSecret);
+
+        $reloadedNote->setSecret(null);
+        $entityManager->flush();
+
+        self::assertNull($reloadedNote->getSecret());
+        self::assertNull($this->fetchStoredSecret($entityManager, $id));
+    }
+
+    public function testItLoadsPlaintextLegacyDatabaseValuesAndEncryptsThemWhenChanged(): void
+    {
+        $entityManager = $this->createEntityManager();
+        $connection = $entityManager->getConnection();
+
+        $connection->insert('orm_secret_notes', [
+            'title' => 'legacy title',
+            'secret' => 'legacy plaintext',
+        ]);
+        $id = (int) $connection->lastInsertId();
+
+        $note = $entityManager->find(OrmSecretNote::class, $id);
+
+        self::assertInstanceOf(OrmSecretNote::class, $note);
+        self::assertSame('legacy plaintext', $note->getSecret());
+
+        $note->setTitle('changed title');
+        $entityManager->flush();
+
+        self::assertSame('legacy plaintext', $note->getSecret());
+        self::assertSame('legacy plaintext', $this->fetchStoredSecret($entityManager, $id));
+
+        $note->setSecret('migrated secret');
+        $entityManager->flush();
+
+        self::assertSame('migrated secret', $note->getSecret());
+
+        $storedSecret = $this->fetchStoredSecret($entityManager, $id);
+        self::assertIsString($storedSecret);
+        self::assertNotSame('migrated secret', $storedSecret);
+        self::assertStringStartsWith('doctrine-encryption:halite:v1:', $storedSecret);
+    }
+
     private function createEntityManager(): EntityManagerInterface
     {
         $config = ORMSetup::createAttributeMetadataConfig([__DIR__ . '/../Fixtures'], true);

@@ -76,15 +76,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             return;
         }
 
-        $fieldValues = $this->restoreRememberedFieldValues($object, $fields);
-
-        if ($fieldValues !== []) {
-            $this->syncOriginalFieldValues($args, $object, $fieldValues);
-
-            return;
-        }
-
-        $this->syncOriginalData($args, $object, $fields);
+        $this->syncOriginalFieldValues($args, $object, $this->restoreRememberedFieldValues($object, $fields));
     }
 
     public function preUpdate(LifecycleEventArgs $args): void
@@ -292,38 +284,6 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
         $this->encryptedFieldValuesByObject->detach($object);
 
         return $rememberedFieldValues;
-    }
-
-    /**
-     * @param list<EncryptedFieldMetadata> $fields
-     */
-    private function syncOriginalData(LifecycleEventArgs $args, object $object, array $fields): void
-    {
-        if ($fields === []) {
-            return;
-        }
-
-        $objectManager = $args->getObjectManager();
-
-        if (!method_exists($objectManager, 'getUnitOfWork')) {
-            return;
-        }
-
-        $unitOfWork = $objectManager->getUnitOfWork();
-
-        if (!method_exists($unitOfWork, 'setOriginalEntityProperty')) {
-            return;
-        }
-
-        $objectId = spl_object_id($object);
-
-        foreach ($fields as $field) {
-            if (!$field->isInitialized($object)) {
-                continue;
-            }
-
-            $unitOfWork->setOriginalEntityProperty($objectId, $field->name, $field->getValue($object));
-        }
     }
 
     /**

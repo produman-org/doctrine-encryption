@@ -130,6 +130,25 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         ], $objectManager->unitOfWork->originalEntityProperties);
     }
 
+    public function testPostPersistSkipsUnitOfWorkWhenNoFieldsWereEncrypted(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $note = new SecretNote('public', null, null);
+        $encryptor = new InMemoryFieldEncryptor();
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), $encryptor);
+        $event = new LifecycleEventArgs($note, $objectManager);
+
+        $subscriber->prePersist($event);
+        $subscriber->postPersist($event);
+
+        self::assertNull($note->getSecret());
+        self::assertNull($note->getNullableSecret());
+        self::assertSame([], $encryptor->encryptedValues);
+        self::assertSame([], $encryptor->decryptedValues);
+        self::assertSame(0, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([], $objectManager->unitOfWork->originalEntityProperties);
+    }
+
     public function testItLeavesNullFieldsUntouched(): void
     {
         $note = new SecretNote('public', 'secret', null);

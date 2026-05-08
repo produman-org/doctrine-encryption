@@ -68,12 +68,24 @@ php bin/console doctrine-encryption:generate-key
 php bin/console doctrine-encryption:generate-key --force
 ```
 
+Для разовой операции можно переопределить путь из конфигурации:
+
+```bash
+php bin/console doctrine-encryption:generate-key --key-file=/run/secrets/doctrine-encryption.key
+```
+
 Используйте `--force` только если вы осознанно хотите заменить ключ. Старые данные, зашифрованные прежним ключом, после этого не расшифруются.
 
 Проверить ключ:
 
 ```bash
 php bin/console doctrine-encryption:validate-key
+```
+
+Или с явным путем:
+
+```bash
+php bin/console doctrine-encryption:validate-key --key-file=/run/secrets/doctrine-encryption.key
 ```
 
 Проверяется наличие файла, читаемость, формат Halite key и права доступа.

@@ -43,6 +43,20 @@ final class KeyCommandTest extends TestCase
         self::assertStringContainsString('Back up this key securely', $tester->getDisplay());
     }
 
+    public function testGenerateKeyCommandAcceptsKeyFileOverride(): void
+    {
+        $configuredKeyFile = $this->directory.'/configured/.Halite.key';
+        $overrideKeyFile = $this->directory.'/override/.Halite.key';
+        $tester = new CommandTester(new GenerateKeyCommand(new KeyFileManager($configuredKeyFile)));
+
+        $exitCode = $tester->execute(['--key-file' => $overrideKeyFile]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertFileDoesNotExist($configuredKeyFile);
+        self::assertFileExists($overrideKeyFile);
+        self::assertStringContainsString($overrideKeyFile, $tester->getDisplay());
+    }
+
     public function testGenerateKeyCommandDoesNotOverwriteExistingKeyWithoutForce(): void
     {
         self::assertTrue(mkdir(dirname($this->keyFile), 0o700, true));
@@ -83,6 +97,22 @@ final class KeyCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertStringContainsString('is valid', $tester->getDisplay());
+    }
+
+    public function testValidateKeyCommandAcceptsKeyFileOverride(): void
+    {
+        $configuredKeyFile = $this->directory.'/configured/.Halite.key';
+        $overrideKeyFile = $this->directory.'/override/.Halite.key';
+        self::assertTrue(mkdir(dirname($overrideKeyFile), 0o700, true));
+        KeyFactory::save(KeyFactory::generateEncryptionKey(), $overrideKeyFile);
+        chmod($overrideKeyFile, 0o600);
+
+        $tester = new CommandTester(new ValidateKeyCommand(new KeyFileManager($configuredKeyFile)));
+
+        $exitCode = $tester->execute(['--key-file' => $overrideKeyFile]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertStringContainsString($overrideKeyFile, $tester->getDisplay());
     }
 
     public function testValidateKeyCommandRejectsMissingKey(): void

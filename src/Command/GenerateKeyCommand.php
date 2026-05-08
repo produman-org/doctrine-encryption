@@ -26,25 +26,39 @@ final class GenerateKeyCommand extends Command
 
     protected function configure(): void
     {
-        $this->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite the existing key file.');
+        $this
+            ->addOption('key-file', null, InputOption::VALUE_REQUIRED, 'Path to the key file. Overrides doctrine_encryption.key_file.')
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite the existing key file.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $force = true === $input->getOption('force');
+        $keyFileManager = $this->keyFileManager($input);
 
         try {
-            $this->keyFileManager->generate($force);
+            $keyFileManager->generate($force);
         } catch (DoctrineEncryptionException $exception) {
             $io->error($exception->getMessage());
 
             return Command::FAILURE;
         }
 
-        $io->success(sprintf('Halite encryption key generated at "%s".', $this->keyFileManager->keyFile()));
+        $io->success(sprintf('Halite encryption key generated at "%s".', $keyFileManager->keyFile()));
         $io->warning('Back up this key securely. If the key is lost, already encrypted data cannot be decrypted.');
 
         return Command::SUCCESS;
+    }
+
+    private function keyFileManager(InputInterface $input): KeyFileManager
+    {
+        $keyFile = $input->getOption('key-file');
+
+        if (null === $keyFile) {
+            return $this->keyFileManager;
+        }
+
+        return new KeyFileManager((string) $keyFile);
     }
 }

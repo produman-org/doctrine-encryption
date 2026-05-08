@@ -1,0 +1,40 @@
+{
+    "name": "doctrine-encryption/doctrine-encryption-bundle",
+    "description": "A small Symfony bundle that encrypts Doctrine entity fields with Halite.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "DoctrineEncryption\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DoctrineEncryption\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.2",
+        "ext-sodium": "*",
+        "doctrine/doctrine-bundle": "^2.12 || ^3.0",
+        "doctrine/orm": "^2.20 || ^3.3",
+        "paragonie/halite": "^5.1",
+        "symfony/config": "^6.4 || ^7.0 || ^8.0",
+        "symfony/dependency-injection": "^6.4 || ^7.0 || ^8.0",
+        "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    }
+}

@@ -1,0 +1,6 @@
+/.phpunit.cache/
+/vendor/
+.idea/
+/config/secrets/*/.Halite.key
+*.key
+*.pem

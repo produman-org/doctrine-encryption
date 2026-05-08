@@ -151,7 +151,8 @@ final class DoctrineOrmEncryptionTest extends TestCase
     private function createEntityManager(): EntityManagerInterface
     {
         $config = ORMSetup::createAttributeMetadataConfig([__DIR__.'/../Fixtures'], true);
-        $config->enableNativeLazyObjects(true);
+        $config->setProxyDir($this->keyDirectory.'/proxies');
+        $config->setProxyNamespace('DoctrineEncryptionIntegrationProxies');
         $eventManager = new EventManager();
         $eventManager->addEventSubscriber(new DoctrineEncryptionSubscriber(
             new EncryptedFieldMetadataFactory(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DoctrineEncryption\Metadata;
 
 use DoctrineEncryption\Attribute\Encrypted;
+use Doctrine\Persistence\Proxy;
 
 final class EncryptedFieldMetadataFactory
 {
@@ -23,7 +24,7 @@ final class EncryptedFieldMetadataFactory
      */
     public function forObject(object $object): array
     {
-        return $this->forClass($object::class);
+        return $this->forClass($this->classForObject($object));
     }
 
     /**
@@ -43,7 +44,7 @@ final class EncryptedFieldMetadataFactory
      */
     public function forObjectFieldNames(object $object, array $fieldNames): array
     {
-        return $this->forClassFieldNames($object::class, $fieldNames);
+        return $this->forClassFieldNames($this->classForObject($object), $fieldNames);
     }
 
     /**
@@ -102,6 +103,22 @@ final class EncryptedFieldMetadataFactory
         } while ($reflection !== false);
 
         return $fields;
+    }
+
+    /**
+     * @return class-string
+     */
+    private function classForObject(object $object): string
+    {
+        if ($object instanceof Proxy) {
+            $parentClass = get_parent_class($object);
+
+            if ($parentClass !== false) {
+                return $parentClass;
+            }
+        }
+
+        return $object::class;
     }
 
     /**

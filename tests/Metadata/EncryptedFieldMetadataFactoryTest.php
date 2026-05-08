@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DoctrineEncryption\Tests\Metadata;
 
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use DoctrineEncryption\Tests\Fixtures\InheritableSecretNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNoteProxy;
 use DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
@@ -62,5 +63,15 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
         $fields = $factory->forObject(new SecretNoteProxy('secret'));
 
         self::assertSame(['secret'], array_map(static fn ($field): string => $field->name, $fields));
+    }
+
+    public function testDoctrineProxyObjectsReuseParentClassMetadata(): void
+    {
+        $factory = new EncryptedFieldMetadataFactory();
+
+        $parentFields = $factory->forObject(new InheritableSecretNote('secret'));
+        $proxyFields = $factory->forObject(new SecretNoteProxy('secret'));
+
+        self::assertSame($parentFields, $proxyFields);
     }
 }

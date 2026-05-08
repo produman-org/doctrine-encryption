@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Tests\Fixtures;
 
-final readonly class SecretNoteProxy extends InheritableSecretNote
+use Doctrine\Persistence\Proxy;
+
+final readonly class SecretNoteProxy extends InheritableSecretNote implements Proxy
 {
+    public function __load(): void
+    {
+    }
+
+    public function __isInitialized(): bool
+    {
+        return true;
+    }
 }

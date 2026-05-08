@@ -63,6 +63,42 @@ final class HaliteFieldEncryptor implements FieldEncryptorInterface
             throw new \RuntimeException(sprintf('Unable to create Halite key directory "%s".', $directory));
         }
 
-        KeyFactory::save(KeyFactory::generateEncryptionKey(), $this->keyFile);
+        $lockFile = $this->keyFile . '.lock';
+        $lockHandle = fopen($lockFile, 'c');
+
+        if ($lockHandle === false) {
+            throw new \RuntimeException(sprintf('Unable to open Halite key lock file "%s".', $lockFile));
+        }
+
+        try {
+            if (!flock($lockHandle, LOCK_EX)) {
+                throw new \RuntimeException(sprintf('Unable to lock Halite key lock file "%s".', $lockFile));
+            }
+
+            if (is_file($this->keyFile)) {
+                return;
+            }
+
+            $temporaryKeyFile = sprintf(
+                '%s.%s.tmp',
+                $this->keyFile,
+                bin2hex(random_bytes(8)),
+            );
+
+            try {
+                KeyFactory::save(KeyFactory::generateEncryptionKey(), $temporaryKeyFile);
+
+                if (!rename($temporaryKeyFile, $this->keyFile)) {
+                    throw new \RuntimeException(sprintf('Unable to move generated Halite key file to "%s".', $this->keyFile));
+                }
+            } finally {
+                if (isset($temporaryKeyFile) && is_file($temporaryKeyFile)) {
+                    unlink($temporaryKeyFile);
+                }
+            }
+        } finally {
+            flock($lockHandle, LOCK_UN);
+            fclose($lockHandle);
+        }
     }
 }

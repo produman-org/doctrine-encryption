@@ -55,7 +55,8 @@ final class HaliteFieldEncryptorTest extends TestCase
         $ciphertext = $encryptor->encrypt('top secret');
 
         self::assertFileExists($keyFile);
-        self::assertSame('top secret', $encryptor->decrypt($ciphertext));
+        self::assertFileExists($keyFile . '.lock');
+        self::assertSame('top secret', (new HaliteFieldEncryptor($keyFile))->decrypt($ciphertext));
     }
 
     public function testItRejectsEmptyKeyFilePath(): void

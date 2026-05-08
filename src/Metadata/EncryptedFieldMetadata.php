@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace DoctrineEncryption\Metadata;
 
-final class EncryptedFieldMetadata
+final readonly class EncryptedFieldMetadata
 {
     public function __construct(
-        public readonly string $name,
-        private readonly \ReflectionProperty $property,
+        public string $name,
+        private \ReflectionProperty $property,
     ) {
     }
 

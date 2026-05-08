@@ -6,7 +6,7 @@ namespace DoctrineEncryption\Tests\Fixtures;
 
 use DoctrineEncryption\Attribute\Encrypted;
 
-class InheritableSecretNote
+readonly class InheritableSecretNote
 {
     public function __construct(
         #[Encrypted]

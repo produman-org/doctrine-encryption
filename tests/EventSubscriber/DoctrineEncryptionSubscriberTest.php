@@ -6,9 +6,12 @@ namespace DoctrineEncryption\Tests\EventSubscriber;
 
 use DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
 use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use DoctrineEncryption\Tests\Fixtures\PublicNote;
 use DoctrineEncryption\Tests\Fixtures\SecretNote;
 use DoctrineEncryption\Tests\Support\InMemoryFieldEncryptor;
+use DoctrineEncryption\Tests\Support\RecordingObjectManager;
 use Doctrine\ORM\Events;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Event\OnClearEventArgs;
 use Doctrine\Persistence\Event\PreUpdateEventArgs;
 use Doctrine\Persistence\ObjectManager;
@@ -21,6 +24,30 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
 
         self::assertContains(Events::onClear, $subscriber->getSubscribedEvents());
+    }
+
+    public function testPostLoadSkipsUnitOfWorkForObjectsWithoutEncryptedFields(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+
+        $subscriber->postLoad(new LifecycleEventArgs(new PublicNote('public'), $objectManager));
+
+        self::assertSame(0, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([], $objectManager->unitOfWork->originalEntityProperties);
+    }
+
+    public function testPostLoadDecryptsEncryptedFieldsAndSyncsOriginalData(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $note = new SecretNote('public', 'enc:secret');
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+
+        $subscriber->postLoad(new LifecycleEventArgs($note, $objectManager));
+
+        self::assertSame('secret', $note->getSecret());
+        self::assertSame(1, $objectManager->getUnitOfWorkCalls);
+        self::assertSame('secret', $objectManager->unitOfWork->originalEntityProperties[0]['value']);
     }
 
     public function testItEncryptsBeforePersistAndRestoresPlaintextAfterPersist(): void

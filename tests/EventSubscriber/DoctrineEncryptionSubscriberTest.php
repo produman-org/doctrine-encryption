@@ -11,7 +11,9 @@ use Doctrine\Persistence\Event\PreUpdateEventArgs;
 use Doctrine\Persistence\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use ProdumanOrg\DoctrineEncryption\EventSubscriber\DoctrineEncryptionSubscriber;
+use ProdumanOrg\DoctrineEncryption\Exception\ConfigurationException;
 use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
+use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\MixedSecretNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\PublicNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\SecretNote;
@@ -42,12 +44,14 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
     {
         $objectManager = new RecordingObjectManager();
         $note = new SecretNote('public', 'enc:secret', 'legacy nullable');
-        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+        $encryptor = new InMemoryFieldEncryptor();
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), $encryptor);
 
         $subscriber->postLoad(new LifecycleEventArgs($note, $objectManager));
 
         self::assertSame('secret', $note->getSecret());
         self::assertSame('legacy nullable', $note->getNullableSecret());
+        self::assertSame(['enc:secret', 'legacy nullable'], $encryptor->decryptedValues);
         self::assertSame(1, $objectManager->getUnitOfWorkCalls);
         self::assertSame([
             [
@@ -157,6 +161,16 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         $subscriber->encryptObject($note);
 
         self::assertNull($note->getNullableSecret());
+    }
+
+    public function testItRejectsNonStringEncryptedFields(): void
+    {
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), new InMemoryFieldEncryptor());
+
+        $this->expectException(ConfigurationException::class);
+        $this->expectExceptionMessage('Encrypted field "secret" must be a string or null.');
+
+        $subscriber->encryptObject(new MixedSecretNote(['not a string']));
     }
 
     public function testPreUpdateDoesNotEncryptFieldsThatDidNotChange(): void

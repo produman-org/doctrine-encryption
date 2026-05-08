@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace ProdumanOrg\DoctrineEncryption\Tests\Metadata;
 
 use PHPUnit\Framework\TestCase;
+use ProdumanOrg\DoctrineEncryption\Exception\ConfigurationException;
 use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\InheritableSecretNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\PartialSecretNote;
+use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\ReadonlySecretNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\SecretNote;
 use ProdumanOrg\DoctrineEncryption\Tests\Fixtures\SecretNoteProxy;
 
@@ -73,5 +75,15 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
         $proxyFields = $factory->forObject(new SecretNoteProxy('secret'));
 
         self::assertSame($parentFields, $proxyFields);
+    }
+
+    public function testItRejectsReadonlyEncryptedProperties(): void
+    {
+        $factory = new EncryptedFieldMetadataFactory();
+
+        $this->expectException(ConfigurationException::class);
+        $this->expectExceptionMessage('Encrypted readonly properties are not supported.');
+
+        $factory->forObject(new ReadonlySecretNote('secret'));
     }
 }

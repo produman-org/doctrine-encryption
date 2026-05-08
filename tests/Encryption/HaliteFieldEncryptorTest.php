@@ -8,9 +8,12 @@ use FilesystemIterator;
 use ParagonIE\Halite\KeyFactory;
 use PHPUnit\Framework\TestCase;
 use ProdumanOrg\DoctrineEncryption\Encryption\HaliteFieldEncryptor;
+use ProdumanOrg\DoctrineEncryption\Exception\ConfigurationException;
+use ProdumanOrg\DoctrineEncryption\Exception\DecryptionFailedException;
+use ProdumanOrg\DoctrineEncryption\Exception\InvalidCiphertextException;
+use ProdumanOrg\DoctrineEncryption\Exception\KeyNotFoundException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use RuntimeException;
 
 final class HaliteFieldEncryptorTest extends TestCase
 {
@@ -50,17 +53,38 @@ final class HaliteFieldEncryptorTest extends TestCase
         self::assertSame('top secret', $encryptor->decrypt($ciphertext));
     }
 
-    public function testItReturnsPlaintextValuesWithoutCiphertextPrefixAsIs(): void
+    public function testItRejectsPlaintextValuesByDefault(): void
     {
         $encryptor = new HaliteFieldEncryptor($this->keyFile);
+
+        $this->expectException(InvalidCiphertextException::class);
+        $this->expectExceptionMessage('Plaintext value found in an encrypted field');
+
+        $encryptor->decrypt('legacy plaintext');
+    }
+
+    public function testItAllowsPlaintextValuesInLegacyMode(): void
+    {
+        $encryptor = new HaliteFieldEncryptor($this->keyFile, allowPlaintext: true);
 
         self::assertSame('legacy plaintext', $encryptor->decrypt('legacy plaintext'));
     }
 
-    public function testItCreatesMissingKeyFile(): void
+    public function testItRejectsMissingKeyFileByDefault(): void
+    {
+        $keyFile = $this->keyDirectory.'/missing/config/secrets/test/.Halite.key';
+        $encryptor = new HaliteFieldEncryptor($keyFile);
+
+        $this->expectException(KeyNotFoundException::class);
+        $this->expectExceptionMessage('was not found');
+
+        $encryptor->encrypt('top secret');
+    }
+
+    public function testItCreatesMissingKeyFileWhenAutoGenerationIsEnabled(): void
     {
         $keyFile = $this->keyDirectory.'/another/config/secrets/test/.Halite.key';
-        $encryptor = new HaliteFieldEncryptor($keyFile);
+        $encryptor = new HaliteFieldEncryptor($keyFile, autoGenerateKey: true);
 
         self::assertFileDoesNotExist($keyFile);
 
@@ -73,12 +97,35 @@ final class HaliteFieldEncryptorTest extends TestCase
         self::assertSame('top secret', (new HaliteFieldEncryptor($keyFile))->decrypt($ciphertext));
     }
 
+    public function testItRejectsCorruptedCiphertext(): void
+    {
+        $encryptor = new HaliteFieldEncryptor($this->keyFile);
+
+        $this->expectException(DecryptionFailedException::class);
+        $this->expectExceptionMessage('Unable to decrypt encrypted field value.');
+
+        $encryptor->decrypt('doctrine-encryption:halite:v1:not-valid-ciphertext');
+    }
+
+    public function testItRejectsCiphertextEncryptedWithAnotherKey(): void
+    {
+        $anotherKeyFile = $this->keyDirectory.'/another-key/.Halite.key';
+        self::assertTrue(mkdir(dirname($anotherKeyFile), 0o700, true));
+        KeyFactory::save(KeyFactory::generateEncryptionKey(), $anotherKeyFile);
+
+        $ciphertext = (new HaliteFieldEncryptor($this->keyFile))->encrypt('top secret');
+
+        $this->expectException(DecryptionFailedException::class);
+
+        (new HaliteFieldEncryptor($anotherKeyFile))->decrypt($ciphertext);
+    }
+
     public function testItRejectsEmptyKeyFilePath(): void
     {
         $encryptor = new HaliteFieldEncryptor('');
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Halite encryption key file path must not be empty.');
+        $this->expectException(ConfigurationException::class);
+        $this->expectExceptionMessage('The "doctrine_encryption.key_file" option must not be empty.');
 
         $encryptor->encrypt('top secret');
     }

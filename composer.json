@@ -1,6 +1,6 @@
 {
     "name": "produman-org/doctrine-encryption",
-    "description": "A small Symfony bundle that encrypts Doctrine entity fields with Halite.",
+    "description": "A Symfony bundle that encrypts Doctrine entity fields with Halite.",
     "type": "symfony-bundle",
     "license": "MIT",
     "autoload": {
@@ -17,19 +17,19 @@
         "php": ">=8.2",
         "ext-sodium": "*",
         "doctrine/doctrine-bundle": "^2.12",
-        "doctrine/instantiator": "^1.5",
-        "doctrine/orm": "^2.20 || ^3.3",
+        "doctrine/orm": "^3.3",
         "paragonie/halite": "^5.1",
-        "symfony/config": "^6.4 || ^7.4",
-        "symfony/dependency-injection": "^6.4 || ^7.4",
-        "symfony/http-kernel": "^6.4 || ^7.4"
+        "symfony/config": "^7.4",
+        "symfony/console": "^7.4",
+        "symfony/dependency-injection": "^7.4",
+        "symfony/http-kernel": "^7.4"
     },
     "require-dev": {
         "ext-pdo_sqlite": "*",
         "friendsofphp/php-cs-fixer": "^3.75",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^10.5 || ^11.0",
-        "symfony/var-exporter": "^6.4 || ^7.4"
+        "phpunit/phpunit": "^11.0",
+        "symfony/var-exporter": "^7.4"
     },
     "scripts": {
         "analyse": "phpstan analyse",
@@ -43,9 +43,20 @@
             "php": "8.2.0"
         }
     },
+    "keywords": [
+        "doctrine",
+        "encryption",
+        "field-encryption",
+        "halite",
+        "symfony-bundle"
+    ],
+    "support": {
+        "issues": "https://github.com/produman-org/doctrine-encryption/issues",
+        "source": "https://github.com/produman-org/doctrine-encryption"
+    },
     "extra": {
         "branch-alias": {
-            "dev-main": "1.0-dev"
+            "dev-main": "0.1-dev"
         }
     }
 }

@@ -82,7 +82,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
 
     public function testItKeepsNullEncryptedFieldsNull(): void
     {
-        $entityManager = $this->createEntityManager();
+        $entityManager = $this->createEntityManager(allowPlaintext: true);
 
         $note = new OrmSecretNote('public title', null);
         $entityManager->persist($note);
@@ -117,7 +117,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
 
     public function testItLoadsPlaintextLegacyDatabaseValuesAndEncryptsThemWhenChanged(): void
     {
-        $entityManager = $this->createEntityManager();
+        $entityManager = $this->createEntityManager(allowPlaintext: true);
         $connection = $entityManager->getConnection();
 
         $connection->insert('orm_secret_notes', [
@@ -148,7 +148,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
         self::assertStringStartsWith('doctrine-encryption:halite:v1:', $storedSecret);
     }
 
-    private function createEntityManager(): EntityManagerInterface
+    private function createEntityManager(bool $allowPlaintext = false): EntityManagerInterface
     {
         $config = ORMSetup::createAttributeMetadataConfig([__DIR__.'/../Fixtures'], true);
         $config->setProxyDir($this->keyDirectory.'/proxies');
@@ -156,7 +156,7 @@ final class DoctrineOrmEncryptionTest extends TestCase
         $eventManager = new EventManager();
         $eventManager->addEventSubscriber(new DoctrineEncryptionSubscriber(
             new EncryptedFieldMetadataFactory(),
-            new HaliteFieldEncryptor($this->keyDirectory.'/config/secrets/test/.Halite.key'),
+            new HaliteFieldEncryptor($this->keyDirectory.'/config/secrets/test/.Halite.key', autoGenerateKey: true, allowPlaintext: $allowPlaintext),
         ));
         $connection = DriverManager::getConnection([
             'driver' => 'pdo_sqlite',

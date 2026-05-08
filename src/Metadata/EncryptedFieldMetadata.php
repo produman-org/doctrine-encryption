@@ -6,6 +6,9 @@ namespace ProdumanOrg\DoctrineEncryption\Metadata;
 
 use ReflectionProperty;
 
+/**
+ * @internal
+ */
 final readonly class EncryptedFieldMetadata
 {
     public function __construct(

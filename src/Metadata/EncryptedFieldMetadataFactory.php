@@ -6,8 +6,12 @@ namespace ProdumanOrg\DoctrineEncryption\Metadata;
 
 use Doctrine\Persistence\Proxy;
 use ProdumanOrg\DoctrineEncryption\Attribute\Encrypted;
+use ProdumanOrg\DoctrineEncryption\Exception\ConfigurationException;
 use ReflectionClass;
 
+/**
+ * @internal
+ */
 final class EncryptedFieldMetadataFactory
 {
     /**
@@ -95,6 +99,10 @@ final class EncryptedFieldMetadataFactory
 
                 if ([] === $property->getAttributes(Encrypted::class)) {
                     continue;
+                }
+
+                if ($property->isReadOnly()) {
+                    throw ConfigurationException::readonlyEncryptedProperty($property->getDeclaringClass()->getName(), $property->getName());
                 }
 
                 $fields[] = new EncryptedFieldMetadata($property->getName(), $property);

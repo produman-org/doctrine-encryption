@@ -101,7 +101,12 @@ final class DoctrineEncryptionTestKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader): void
     {
-        $loader->load(static function (ContainerBuilder $container): void {
+        $loader->load(function (ContainerBuilder $container): void {
+            $container->loadFromExtension('doctrine_encryption', [
+                'key_file' => $this->projectDir.'/config/secrets/test/.Halite.key',
+                'auto_generate_key' => true,
+            ]);
+
             $container
                 ->setAlias('test.doctrine_encryption.encryptor', HaliteFieldEncryptor::class)
                 ->setPublic(true);

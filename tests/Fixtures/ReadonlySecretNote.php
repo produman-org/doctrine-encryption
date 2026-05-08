@@ -6,15 +6,15 @@ namespace ProdumanOrg\DoctrineEncryption\Tests\Fixtures;
 
 use ProdumanOrg\DoctrineEncryption\Attribute\Encrypted;
 
-class InheritableSecretNote
+final class ReadonlySecretNote
 {
     public function __construct(
         #[Encrypted]
-        private ?string $secret,
+        private readonly string $secret,
     ) {
     }
 
-    public function getSecret(): ?string
+    public function getSecret(): string
     {
         return $this->secret;
     }

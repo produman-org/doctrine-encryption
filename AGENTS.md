@@ -3,8 +3,8 @@
 ## Область
 
 - Репозиторий: `produman-org/doctrine-encryption`.
-- Назначение: Symfony-бандл для шифрования полей Doctrine-сущностей через Halite.
-- Публичная поверхность: один атрибут `#[Encrypted]`, один сервис-шифровальщик, один Doctrine-subscriber и автоподключение бандла.
+- Назначение: Symfony-бандл для шифрования `string|null` полей Doctrine-сущностей через Halite.
+- Публичная поверхность: `#[Encrypted]`, `FieldEncryptorInterface`, `CiphertextDetectorInterface`, package-specific exceptions, console commands и `DoctrineEncryptionBundle`.
 - Предпочтительная модель для работы в этом репозитории: GPT-5.5.
 
 ## Архитектура
@@ -14,15 +14,19 @@
 - `src/EventSubscriber/DoctrineEncryptionSubscriber.php`: Doctrine lifecycle subscriber, который шифрует и расшифровывает поля сущностей.
 - `src/Metadata/EncryptedFieldMetadataFactory.php`: reflection-based кеш метаданных для зашифрованных свойств.
 - `src/Metadata/EncryptedFieldMetadata.php`: тонкий value object вокруг `ReflectionProperty`.
-- `src/DependencyInjection/DoctrineEncryptionExtension.php` и `config/services.php`: регистрация сервисов Symfony.
+- `src/Key/KeyFileManager.php`: internal service для загрузки, генерации и проверки Halite key file.
+- `src/Command/GenerateKeyCommand.php` и `src/Command/ValidateKeyCommand.php`: CLI для lifecycle ключа.
+- `src/DependencyInjection/Configuration.php`, `src/DependencyInjection/DoctrineEncryptionExtension.php` и `config/services.php`: конфигурация и регистрация сервисов Symfony.
 - `src/DoctrineEncryptionBundle.php`: точка входа бандла.
 
 ## Правила рантайма
 
 - Относиться к бандлу как к переиспользуемой библиотеке, а не к приложению.
-- Держать API маленьким и явным. Не добавлять новую конфигурацию, если этого прямо не требует задача.
+- Держать API маленьким и явным. Новая конфигурация должна иметь production-safe default.
 - Не помечать Doctrine ORM entities или изменяемую инфраструктуру Symfony/Doctrine как `readonly`, если корректность такого решения не доказана.
-- Сохранять путь key file: `config/secrets/%kernel.environment%/.Halite.key`.
+- Default `key_file` задаётся через `%env(resolve:DOCTRINE_ENCRYPTION_KEY_FILE)%`; рекомендуемый путь: `config/secrets/%kernel.environment%/.Halite.key`.
+- Не возвращать silent auto-generation ключа по умолчанию: `auto_generate_key=false` должен падать с `KeyNotFoundException`.
+- Plaintext в encrypted-полях по умолчанию запрещён: `allow_plaintext=false`. Legacy режим включается только явно и временно.
 - Сохранять контракт префикса ciphertext, который использует `HaliteFieldEncryptor`.
 - Не менять молча поведение для legacy plaintext-значений, bulk DQL/DBAL операций или обработки Doctrine proxy.
 
@@ -56,7 +60,8 @@
 
 ## Примечания по проекту
 
-- `.Halite.key` создается автоматически в `config/secrets/%kernel.environment%/`.
+- `.Halite.key` нельзя коммитить; потеря ключа означает потерю доступа к уже зашифрованным данным.
+- Автоматическая генерация ключа допустима только при явном `auto_generate_key=true`.
 - `ext-sodium` требуется во время выполнения.
 - `ext-pdo_sqlite` требуется для SQLite integration test suite.
 - Doctrine lifecycle events не срабатывают для bulk DQL/DBAL/raw SQL путей.

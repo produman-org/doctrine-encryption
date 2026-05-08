@@ -13,11 +13,14 @@ use Doctrine\Persistence\Event\PreUpdateEventArgs as PersistencePreUpdateEventAr
 use Doctrine\Persistence\ObjectManager;
 use ProdumanOrg\DoctrineEncryption\Contract\CiphertextDetectorInterface;
 use ProdumanOrg\DoctrineEncryption\Contract\FieldEncryptorInterface;
+use ProdumanOrg\DoctrineEncryption\Exception\ConfigurationException;
 use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadata;
 use ProdumanOrg\DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 use SplObjectStorage;
-use UnexpectedValueException;
 
+/**
+ * @internal
+ */
 final class DoctrineEncryptionSubscriber implements EventSubscriber
 {
     /**
@@ -116,7 +119,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if (null !== $value && !is_string($value)) {
-                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw ConfigurationException::encryptedFieldMustBeStringOrNull($field->name);
             }
 
             if (null === $value) {
@@ -185,7 +188,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if (null !== $value && !is_string($value)) {
-                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw ConfigurationException::encryptedFieldMustBeStringOrNull($field->name);
             }
 
             if (null === $value) {
@@ -216,18 +219,20 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             $value = $field->getValue($object);
 
             if (null !== $value && !is_string($value)) {
-                throw new UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
+                throw ConfigurationException::encryptedFieldMustBeStringOrNull($field->name);
             }
 
             if (null === $value) {
                 continue;
             }
 
-            if ($this->encryptor instanceof CiphertextDetectorInterface && !$this->encryptor->isCiphertext($value)) {
+            $isCiphertext = !($this->encryptor instanceof CiphertextDetectorInterface) || $this->encryptor->isCiphertext($value);
+            $decryptedValue = $this->encryptor->decrypt($value);
+
+            if (!$isCiphertext && $decryptedValue === $value) {
                 continue;
             }
 
-            $decryptedValue = $this->encryptor->decrypt($value);
             $field->setValue($object, $decryptedValue);
             $decryptedFieldValues[$field->name] = $decryptedValue;
         }

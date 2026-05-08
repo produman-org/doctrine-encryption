@@ -15,15 +15,15 @@ use DoctrineEncryption\Metadata\EncryptedFieldMetadataFactory;
 final class DoctrineEncryptionSubscriber implements EventSubscriber
 {
     /**
-     * @var \SplObjectStorage<object, array<string, true>>
+     * @var \SplObjectStorage<object, array<string, string>>
      */
-    private \SplObjectStorage $encryptedFieldsByObject;
+    private \SplObjectStorage $encryptedFieldValuesByObject;
 
     public function __construct(
         private readonly EncryptedFieldMetadataFactory $metadataFactory,
         private readonly FieldEncryptorInterface $encryptor,
     ) {
-        $this->encryptedFieldsByObject = new \SplObjectStorage();
+        $this->encryptedFieldValuesByObject = new \SplObjectStorage();
     }
 
     /**
@@ -63,8 +63,8 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             return;
         }
 
-        $this->decryptRememberedFields($object, $fields);
-        $this->rememberEncryptedFields($object, $this->encryptObjectFields($object, $fields));
+        $this->restoreRememberedFieldValues($object, $fields);
+        $this->rememberEncryptedFieldValues($object, $this->encryptObjectFields($object, $fields));
     }
 
     public function postPersist(LifecycleEventArgs $args): void
@@ -76,7 +76,14 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             return;
         }
 
-        $this->decryptRememberedFields($object, $fields);
+        $fieldValues = $this->restoreRememberedFieldValues($object, $fields);
+
+        if ($fieldValues !== []) {
+            $this->syncOriginalFieldValues($args, $object, $fieldValues);
+
+            return;
+        }
+
         $this->syncOriginalData($args, $object, $fields);
     }
 
@@ -84,13 +91,13 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     {
         $object = $args->getObject();
         $fields = $this->metadataFactory->forObject($object);
-        $encryptedFields = [];
+        $encryptedFieldValues = [];
 
         if ($fields === []) {
             return;
         }
 
-        $this->decryptRememberedFields($object, $fields);
+        $this->restoreRememberedFieldValues($object, $fields);
 
         foreach ($fields as $field) {
             if (method_exists($args, 'hasChangedField') && !$args->hasChangedField($field->name)) {
@@ -117,14 +124,14 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
 
             $encrypted = $this->encryptor->encrypt($value);
             $field->setValue($object, $encrypted);
-            $encryptedFields[] = $field->name;
+            $encryptedFieldValues[$field->name] = $value;
 
             if (method_exists($args, 'hasChangedField') && $args->hasChangedField($field->name)) {
                 $args->setNewValue($field->name, $encrypted);
             }
         }
 
-        $this->rememberEncryptedFields($object, $encryptedFields);
+        $this->rememberEncryptedFieldValues($object, $encryptedFieldValues);
     }
 
     public function postUpdate(LifecycleEventArgs $args): void
@@ -141,13 +148,13 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             return;
         }
 
-        $this->decryptRememberedFields($object, $fields);
-        $this->syncOriginalData($args, $object, $fields);
+        $fieldValues = $this->restoreRememberedFieldValues($object, $fields);
+        $this->syncOriginalFieldValues($args, $object, $fieldValues);
     }
 
     public function onClear(OnClearEventArgs $args): void
     {
-        $this->encryptedFieldsByObject = new \SplObjectStorage();
+        $this->encryptedFieldValuesByObject = new \SplObjectStorage();
     }
 
     /**
@@ -155,7 +162,7 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
      */
     public function encryptObject(object $object): array
     {
-        return $this->encryptObjectFields($object, $this->metadataFactory->forObject($object));
+        return array_keys($this->encryptObjectFields($object, $this->metadataFactory->forObject($object)));
     }
 
     public function decryptObject(object $object): void
@@ -166,11 +173,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     /**
      * @param list<EncryptedFieldMetadata> $fields
      *
-     * @return list<string>
+     * @return array<string, string>
      */
     private function encryptObjectFields(object $object, array $fields): array
     {
-        $encryptedFields = [];
+        $encryptedFieldValues = [];
 
         foreach ($fields as $field) {
             if (!$field->isInitialized($object)) {
@@ -187,11 +194,11 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
                 continue;
             }
 
+            $encryptedFieldValues[$field->name] = $value;
             $field->setValue($object, $this->encryptor->encrypt($value));
-            $encryptedFields[] = $field->name;
         }
 
-        return $encryptedFields;
+        return $encryptedFieldValues;
     }
 
     /**
@@ -219,63 +226,48 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     }
 
     /**
-     * @param list<string> $fieldNames
+     * @param array<string, string> $fieldValues
      */
-    private function rememberEncryptedFields(object $object, array $fieldNames): void
+    private function rememberEncryptedFieldValues(object $object, array $fieldValues): void
     {
-        if ($fieldNames === []) {
+        if ($fieldValues === []) {
             return;
         }
 
-        $rememberedFields = $this->encryptedFieldsByObject[$object] ?? [];
-
-        foreach ($fieldNames as $fieldName) {
-            $rememberedFields[$fieldName] = true;
-        }
-
-        $this->encryptedFieldsByObject[$object] = $rememberedFields;
+        $this->encryptedFieldValuesByObject[$object] = [
+            ...($this->encryptedFieldValuesByObject[$object] ?? []),
+            ...$fieldValues,
+        ];
     }
 
     private function hasRememberedFields(object $object): bool
     {
-        return $this->encryptedFieldsByObject->contains($object)
-            && $this->encryptedFieldsByObject[$object] !== [];
+        return $this->encryptedFieldValuesByObject->contains($object)
+            && $this->encryptedFieldValuesByObject[$object] !== [];
     }
 
     /**
      * @param list<EncryptedFieldMetadata> $fields
      */
-    private function decryptRememberedFields(object $object, array $fields): void
+    private function restoreRememberedFieldValues(object $object, array $fields): array
     {
         if (!$this->hasRememberedFields($object)) {
-            return;
+            return [];
         }
 
-        $rememberedFields = $this->encryptedFieldsByObject[$object];
+        $rememberedFieldValues = $this->encryptedFieldValuesByObject[$object];
 
         foreach ($fields as $field) {
-            if (!isset($rememberedFields[$field->name])) {
+            if (!array_key_exists($field->name, $rememberedFieldValues)) {
                 continue;
             }
 
-            if (!$field->isInitialized($object)) {
-                continue;
-            }
-
-            $value = $field->getValue($object);
-
-            if ($value !== null && !is_string($value)) {
-                throw new \UnexpectedValueException(sprintf('Encrypted field "%s" must be a string or null.', $field->name));
-            }
-
-            if ($value === null) {
-                continue;
-            }
-
-            $field->setValue($object, $this->encryptor->decrypt($value));
+            $field->setValue($object, $rememberedFieldValues[$field->name]);
         }
 
-        $this->encryptedFieldsByObject->detach($object);
+        $this->encryptedFieldValuesByObject->detach($object);
+
+        return $rememberedFieldValues;
     }
 
     /**
@@ -307,6 +299,34 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
             }
 
             $unitOfWork->setOriginalEntityProperty($objectId, $field->name, $field->getValue($object));
+        }
+    }
+
+    /**
+     * @param array<string, string> $fieldValues
+     */
+    private function syncOriginalFieldValues(LifecycleEventArgs $args, object $object, array $fieldValues): void
+    {
+        if ($fieldValues === []) {
+            return;
+        }
+
+        $objectManager = $args->getObjectManager();
+
+        if (!method_exists($objectManager, 'getUnitOfWork')) {
+            return;
+        }
+
+        $unitOfWork = $objectManager->getUnitOfWork();
+
+        if (!method_exists($unitOfWork, 'setOriginalEntityProperty')) {
+            return;
+        }
+
+        $objectId = spl_object_id($object);
+
+        foreach ($fieldValues as $fieldName => $fieldValue) {
+            $unitOfWork->setOriginalEntityProperty($objectId, $fieldName, $fieldValue);
         }
     }
 }

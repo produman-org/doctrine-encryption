@@ -76,6 +76,39 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         self::assertSame('secret', $note->getSecret());
     }
 
+    public function testPrePersistAndPostPersistRestorePlaintextWithoutDecryptingAgain(): void
+    {
+        $objectManager = new RecordingObjectManager();
+        $note = new SecretNote('public', 'secret', 'nullable secret');
+        $encryptor = new InMemoryFieldEncryptor();
+        $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), $encryptor);
+        $event = new LifecycleEventArgs($note, $objectManager);
+
+        $subscriber->prePersist($event);
+
+        self::assertSame('enc:secret', $note->getSecret());
+        self::assertSame('enc:nullable secret', $note->getNullableSecret());
+
+        $subscriber->postPersist($event);
+
+        self::assertSame('secret', $note->getSecret());
+        self::assertSame('nullable secret', $note->getNullableSecret());
+        self::assertSame([], $encryptor->decryptedValues);
+        self::assertSame(1, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([
+            [
+                'objectId' => spl_object_id($note),
+                'property' => 'secret',
+                'value' => 'secret',
+            ],
+            [
+                'objectId' => spl_object_id($note),
+                'property' => 'nullableSecret',
+                'value' => 'nullable secret',
+            ],
+        ], $objectManager->unitOfWork->originalEntityProperties);
+    }
+
     public function testItLeavesNullFieldsUntouched(): void
     {
         $note = new SecretNote('public', 'secret', null);
@@ -106,11 +139,12 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
     {
         $note = new SecretNote('public', 'changed secret', 'unchanged nullable');
         $encryptor = new InMemoryFieldEncryptor();
+        $objectManager = new RecordingObjectManager();
         $subscriber = new DoctrineEncryptionSubscriber(new EncryptedFieldMetadataFactory(), $encryptor);
         $changeSet = [
             'secret' => ['old secret', 'changed secret'],
         ];
-        $event = new PreUpdateEventArgs($note, $this->createStub(ObjectManager::class), $changeSet);
+        $event = new PreUpdateEventArgs($note, $objectManager, $changeSet);
 
         $subscriber->preUpdate($event);
 
@@ -122,8 +156,16 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
         $subscriber->postUpdate($event);
 
         self::assertSame('changed secret', $note->getSecret());
-        self::assertSame(['enc:changed secret'], $encryptor->decryptedValues);
+        self::assertSame([], $encryptor->decryptedValues);
         self::assertSame('unchanged nullable', $note->getNullableSecret());
+        self::assertSame(1, $objectManager->getUnitOfWorkCalls);
+        self::assertSame([
+            [
+                'objectId' => spl_object_id($note),
+                'property' => 'secret',
+                'value' => 'changed secret',
+            ],
+        ], $objectManager->unitOfWork->originalEntityProperties);
     }
 
     public function testPreUpdateDoesNotCallEncryptorWhenEncryptedFieldChangesToNull(): void
@@ -162,7 +204,7 @@ final class DoctrineEncryptionSubscriberTest extends TestCase
 
         self::assertSame('enc:changed secret', $note->getSecret());
         self::assertSame(['changed secret', 'changed secret'], $encryptor->encryptedValues);
-        self::assertSame(['enc:changed secret'], $encryptor->decryptedValues);
+        self::assertSame([], $encryptor->decryptedValues);
         self::assertSame(['old secret', 'enc:changed secret'], $secondChangeSet['secret']);
     }
 

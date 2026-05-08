@@ -34,6 +34,19 @@ final class EncryptedFieldMetadataFactoryTest extends TestCase
         self::assertSame('changed', $note->getSecret());
     }
 
+    public function testItFindsOnlyRequestedEncryptedProperties(): void
+    {
+        $factory = new EncryptedFieldMetadataFactory();
+
+        $fields = $factory->forObjectFieldNames(new SecretNote('public', 'secret'), [
+            'title',
+            'nullableSecret',
+            'missing',
+        ]);
+
+        self::assertSame(['nullableSecret'], array_map(static fn ($field): string => $field->name, $fields));
+    }
+
     public function testEncryptedFieldsCanDetectUninitializedProperties(): void
     {
         $note = new PartialSecretNote();

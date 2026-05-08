@@ -90,20 +90,21 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     public function preUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
-        $fields = $this->metadataFactory->forObject($object);
+        $changedFieldNames = $this->changedFieldNames($args);
+        $fields = $changedFieldNames === null
+            ? $this->metadataFactory->forObject($object)
+            : $this->metadataFactory->forObjectFieldNames($object, $changedFieldNames);
         $encryptedFieldValues = [];
 
-        if ($fields === []) {
+        if ($fields === [] && !$this->hasRememberedFields($object)) {
             return;
         }
 
-        $this->restoreRememberedFieldValues($object, $fields);
+        if ($this->hasRememberedFields($object)) {
+            $this->restoreRememberedFieldValues($object, $this->metadataFactory->forObject($object));
+        }
 
         foreach ($fields as $field) {
-            if (method_exists($args, 'hasChangedField') && !$args->hasChangedField($field->name)) {
-                continue;
-            }
-
             if (!$field->isInitialized($object)) {
                 continue;
             }
@@ -255,6 +256,18 @@ final class DoctrineEncryptionSubscriber implements EventSubscriber
     {
         return $this->encryptedFieldValuesByObject->contains($object)
             && $this->encryptedFieldValuesByObject[$object] !== [];
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function changedFieldNames(LifecycleEventArgs $args): ?array
+    {
+        if (!method_exists($args, 'getEntityChangeSet')) {
+            return null;
+        }
+
+        return array_keys($args->getEntityChangeSet());
     }
 
     /**

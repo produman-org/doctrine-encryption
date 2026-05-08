@@ -14,6 +14,11 @@ final class EncryptedFieldMetadataFactory
     private array $cache = [];
 
     /**
+     * @var array<class-string, array<string, EncryptedFieldMetadata>>
+     */
+    private array $cacheByFieldName = [];
+
+    /**
      * @return list<EncryptedFieldMetadata>
      */
     public function forObject(object $object): array
@@ -29,6 +34,42 @@ final class EncryptedFieldMetadataFactory
     public function forClass(string $class): array
     {
         return $this->cache[$class] ??= $this->buildForClass($class);
+    }
+
+    /**
+     * @param list<string> $fieldNames
+     *
+     * @return list<EncryptedFieldMetadata>
+     */
+    public function forObjectFieldNames(object $object, array $fieldNames): array
+    {
+        return $this->forClassFieldNames($object::class, $fieldNames);
+    }
+
+    /**
+     * @param class-string $class
+     * @param list<string> $fieldNames
+     *
+     * @return list<EncryptedFieldMetadata>
+     */
+    public function forClassFieldNames(string $class, array $fieldNames): array
+    {
+        if ($fieldNames === []) {
+            return [];
+        }
+
+        $fieldsByName = $this->fieldsByNameForClass($class);
+        $fields = [];
+
+        foreach ($fieldNames as $fieldName) {
+            if (!isset($fieldsByName[$fieldName])) {
+                continue;
+            }
+
+            $fields[] = $fieldsByName[$fieldName];
+        }
+
+        return $fields;
     }
 
     /**
@@ -61,5 +102,25 @@ final class EncryptedFieldMetadataFactory
         } while ($reflection !== false);
 
         return $fields;
+    }
+
+    /**
+     * @param class-string $class
+     *
+     * @return array<string, EncryptedFieldMetadata>
+     */
+    private function fieldsByNameForClass(string $class): array
+    {
+        if (isset($this->cacheByFieldName[$class])) {
+            return $this->cacheByFieldName[$class];
+        }
+
+        $fieldsByName = [];
+
+        foreach ($this->forClass($class) as $field) {
+            $fieldsByName[$field->name] = $field;
+        }
+
+        return $this->cacheByFieldName[$class] = $fieldsByName;
     }
 }
